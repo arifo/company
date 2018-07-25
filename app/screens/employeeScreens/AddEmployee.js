@@ -47,15 +47,7 @@ class AddEmployee extends Component {
               joinDate: Yup.string().notRequired(),
               rating: Yup.number().notRequired()
             })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isValid
-            }) => (
+            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%', marginBottom: 20 }}>
                 <InputForm
                   label="Name"
@@ -171,7 +163,7 @@ class AddEmployee extends Component {
                 </View>
                 <Button
                   title="Save Employee"
-                  buttonStyle={{ marginVertical: 10, backgroundColor: 'blue' }}
+                  buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
                   // disabled={!isValid}
                   onPress={handleSubmit}
                 />

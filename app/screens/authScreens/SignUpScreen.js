@@ -1,20 +1,45 @@
 import React, { Component } from 'react';
-import { Alert, View } from 'react-native';
-import { Button, Icon, Text, Card } from 'react-native-elements';
+import { Button, Text, Card } from 'react-native-elements';
+import { Alert } from 'react-native';
+import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
+import { loginAction } from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
-import RootNavigator from '../../navigation/RootNavigator';
+
+const api = user =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (user.email === '123@123.com') {
+        reject({ email: 'Email already exists' });
+      } else {
+        resolve();
+      }
+    }, 3000);
+  });
 
 class SignUpScreen extends Component {
-  onSignUp = values => {
-    this.props.loginAction();
-    if (this.props.loggedIn) {
-      this.props.navigation.navigate('App');
+  constructor(props) {
+    super(props);
+    this.passTextInput = null;
+    this.confirmPassTextInput = null;
+  }
+  onSignUp = async (values, bag) => {
+    try {
+      await api(values);
+      this.props.loginAction();
+      if (this.props.loggedIn) {
+        this.props.navigation.navigate('App');
+      }
+      Alert.alert('Welcome User');
+    } catch (error) {
+      bag.setSubmitting(false);
+      bag.setErrors(error);
     }
   };
+
   render() {
     return (
       <Container
@@ -47,7 +72,6 @@ class SignUpScreen extends Component {
             errors,
             touched,
             setFieldTouched,
-            isValid,
             isSubmitting
           }) => (
             <Card style={{ borderWidth: 1, width: '92%' }}>
@@ -57,6 +81,9 @@ class SignUpScreen extends Component {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType={'next'}
+                onSubmitEditing={event => {
+                  this.passTextInput.focus();
+                }}
                 blurOnSubmit={false}
                 value={values.email}
                 onChange={setFieldValue}
@@ -69,7 +96,14 @@ class SignUpScreen extends Component {
                 placeholder="password"
                 autoCapitalize="none"
                 secureTextEntry
-                returnKeyType={'done'}
+                returnKeyType={'next'}
+                inputRef={input => {
+                  this.passTextInput = input;
+                }}
+                returnKeyType={'next'}
+                onSubmitEditing={event => {
+                  this.confirmPassTextInput.focus();
+                }}
                 value={values.password}
                 onChange={setFieldValue}
                 onTouch={setFieldTouched}
@@ -82,6 +116,9 @@ class SignUpScreen extends Component {
                 autoCapitalize="none"
                 secureTextEntry
                 returnKeyType={'done'}
+                inputRef={input => {
+                  this.confirmPassTextInput = input;
+                }}
                 value={values.confirmPassword}
                 onChange={setFieldValue}
                 onTouch={setFieldTouched}
@@ -92,7 +129,6 @@ class SignUpScreen extends Component {
               <Button
                 title="Sign Up"
                 buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-                //disabled={!isValid || isSubmitting}
                 loading={isSubmitting}
                 onPress={handleSubmit}
               />
@@ -104,4 +140,11 @@ class SignUpScreen extends Component {
   }
 }
 
-export default SignUpScreen;
+const mapStateToProps = state => ({
+  loggedIn: state.auth.loggedIn
+});
+
+export default connect(
+  mapStateToProps,
+  { loginAction }
+)(SignUpScreen);

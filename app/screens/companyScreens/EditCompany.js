@@ -17,7 +17,6 @@ class EditCompany extends Component {
   };
 
   render() {
-    // const { type } = this.props.navigation.state.params;
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }}>
@@ -53,12 +52,6 @@ class EditCompany extends Component {
                 <Button
                   title="Delete Company"
                   buttonStyle={{ backgroundColor: 'red' }}
-                  // onPress={() =>
-                  //   this.props.navigation.navigate('CompanyScreen', {
-                  //     title: 'View Company',
-                  //     type: 'view'
-                  //   })
-                  // }
                   onPress={this.onDelete}
                 />
               </Card>
