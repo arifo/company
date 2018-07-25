@@ -32,15 +32,7 @@ class AddMemo extends Component {
               note: Yup.string().required(),
               reminder: Yup.string().notRequired()
             })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isValid
-            }) => (
+            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%' }}>
                 <InputForm
                   label="Memo"

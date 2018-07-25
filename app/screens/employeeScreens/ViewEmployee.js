@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Rating, Text } from 'react-native-elements';
-import { ScrollView, View } from 'react-native';
+import { Rating } from 'react-native-elements';
+import { ScrollView } from 'react-native';
 import moment from 'moment';
 
 import Container from '../../components/Container';

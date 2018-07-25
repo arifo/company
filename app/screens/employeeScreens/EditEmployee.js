@@ -43,15 +43,7 @@ class EditEmployee extends Component {
               joinDate: Yup.string().notRequired(),
               rating: Yup.number().notRequired()
             })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isValid
-            }) => (
+            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%', marginBottom: 20 }}>
                 <InputForm
                   label="Name"
@@ -144,7 +136,7 @@ class EditEmployee extends Component {
                   />
                 </View>
                 <Button
-                  title="Delete Company"
+                  title="Delete Employee"
                   buttonStyle={{ backgroundColor: 'red' }}
                   onPress={this.onDelete}
                 />

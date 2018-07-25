@@ -10,6 +10,7 @@ import InputForm from '../../components/InputForm';
 class ForgotPassword extends React.Component {
   handleSubmit = values => {
     console.log(JSON.stringify(values));
+    this.props.navigation.goBack();
   };
 
   render() {
@@ -38,7 +39,6 @@ class ForgotPassword extends React.Component {
             errors,
             touched,
             setFieldTouched,
-            isValid,
             isSubmitting
           }) => (
             <Card style={{ borderWidth: 1, width: '92%' }}>
@@ -59,12 +59,18 @@ class ForgotPassword extends React.Component {
               <Button
                 title="Submit"
                 buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-                //disabled={!isValid || isSubmitting}
                 loading={isSubmitting}
                 onPress={handleSubmit}
               />
             </Card>
           )}
+        />
+        <Button
+          title="Cancel"
+          buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
+          onPress={() => {
+            this.props.navigation.goBack();
+          }}
         />
       </Container>
     );

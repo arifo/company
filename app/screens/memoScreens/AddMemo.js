@@ -33,15 +33,7 @@ class AddMemo extends Component {
               note: Yup.string().required(),
               reminder: Yup.string().notRequired()
             })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isValid
-            }) => (
+            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%' }}>
                 <InputForm
                   label="Memo"
@@ -104,8 +96,7 @@ class AddMemo extends Component {
                 </View>
                 <Button
                   title="Save Memo"
-                  buttonStyle={{ marginVertical: 20, backgroundColor: 'blue' }}
-                  // disabled={!isValid}
+                  buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
                   onPress={handleSubmit}
                 />
               </Card>

@@ -14,6 +14,7 @@ class EditCompany extends Component {
 
   onDelete = () => {
     console.log('Company Deleted');
+    this.props.navigation.replace('Companies');
   };
 
   render() {

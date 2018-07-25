@@ -14,7 +14,7 @@ class AddCompany extends Component {
   }
   onSave = async values => {
     console.log(JSON.stringify(values));
-    this.props.navigation.navigate('ViewCompany', {
+    this.props.navigation.replace('ViewCompany', {
       title: `${values.name}`
     });
   };

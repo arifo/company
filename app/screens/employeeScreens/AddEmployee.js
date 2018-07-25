@@ -18,7 +18,7 @@ class AddEmployee extends Component {
   }
   onSave = values => {
     console.log(JSON.stringify(values));
-    this.props.navigation.navigate('ViewEmployee', {
+    this.props.navigation.replace('ViewEmployee', {
       title: `${values.name}`
     });
   };

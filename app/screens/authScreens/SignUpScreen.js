@@ -135,6 +135,13 @@ class SignUpScreen extends Component {
             </Card>
           )}
         />
+        <Button
+          title="Cancel"
+          buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
+          onPress={() => {
+            this.props.navigation.goBack();
+          }}
+        />
       </Container>
     );
   }

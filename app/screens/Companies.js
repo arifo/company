@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { PlatformIOS, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { PlatformIOS, ScrollView, TouchableOpacity } from 'react-native';
 import { Header, Icon, List, ListItem } from 'react-native-elements';
 
 import Container from '../components/Container';
@@ -65,7 +65,6 @@ class Companies extends Component {
                   })
                 }
                 component={TouchableOpacity}
-                //underlayColor="#babaf2"
               />
             ))}
           </List>
