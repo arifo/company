@@ -25,17 +25,30 @@ class AddCompany extends Component {
   };
 
   onDelete = () => {
-    const { company } = this.props.navigation.state.params;
+    Alert.alert(
+      'Are sure you want to Delete?',
+      '',
+      [
+        {
+          text: 'Ok',
+          onPress: () => {
+            const { company } = this.props.navigation.state.params;
 
-    const newArray = JSON.parse(JSON.stringify(this.props.companies));
+            const newArray = JSON.parse(JSON.stringify(this.props.companies));
 
-    newArray.forEach((val, key) => {
-      if (val.id === company.id) {
-        newArray.splice(key, 1);
-        this.props.addCompany(newArray);
-        this.props.navigation.replace('Companies');
-      }
-    });
+            newArray.forEach((val, key) => {
+              if (val.id === company.id) {
+                newArray.splice(key, 1);
+                this.props.addCompany(newArray);
+                this.props.navigation.replace('Companies');
+              }
+            });
+          }
+        },
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
+      ],
+      { cancelable: true }
+    );
   };
 
   saveNewCompany = value => {
@@ -110,13 +123,12 @@ class AddCompany extends Component {
               description: Yup.string().required()
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
-              <Card>
+              <Card containerStyle={{ flexGrow: 1 }}>
                 <InputForm
                   label="Company Name"
-                  containerStyle={{ marginBottom: 40 }}
                   placeholder="your company name..."
                   returnKeyType={'next'}
-                  onSubmitEditing={event => {
+                  onSubmitEditing={() => {
                     this.passTextInput.focus();
                   }}
                   value={values.name}
@@ -128,8 +140,7 @@ class AddCompany extends Component {
                 <InputForm
                   label="Description"
                   multiline
-                  placeholder="company description"
-                  containerStyle={{ marginBottom: 40 }}
+                  placeholder="company description ..."
                   returnKeyType={'done'}
                   inputRef={input => {
                     this.passTextInput = input;

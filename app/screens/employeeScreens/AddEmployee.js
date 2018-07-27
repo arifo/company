@@ -51,7 +51,7 @@ class AddEmployee extends Component {
                 <InputForm
                   label="Name"
                   placeholder="Employee name..."
-                  onSubmitEditing={event => {
+                  onSubmitEditing={() => {
                     this.phoneTextInput.focus();
                   }}
                   returnKeyType={'next'}
@@ -69,7 +69,7 @@ class AddEmployee extends Component {
                   inputRef={input => {
                     this.phoneTextInput = input;
                   }}
-                  onSubmitEditing={event => {
+                  onSubmitEditing={() => {
                     this.emailTextInput.focus();
                   }}
                   value={values.phone}
@@ -87,7 +87,7 @@ class AddEmployee extends Component {
                   inputRef={input => {
                     this.emailTextInput = input;
                   }}
-                  onSubmitEditing={event => {
+                  onSubmitEditing={() => {
                     this.depTextInput.focus();
                   }}
                   value={values.email}

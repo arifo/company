@@ -38,7 +38,7 @@ class AddMemo extends Component {
                   label="Memo"
                   placeholder="memo title..."
                   returnKeyType={'next'}
-                  onSubmitEditing={event => {
+                  onSubmitEditing={() => {
                     this.noteTextInput.focus();
                   }}
                   value={values.title}

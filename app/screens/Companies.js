@@ -10,6 +10,9 @@ import Container from '../components/Container';
 const deviceWidth = Dimensions.get('screen').width;
 
 class Companies extends Component {
+  state = {
+    isSorted: false
+  };
   componentDidUpdate() {
     const { loggedIn, navigation } = this.props;
     if (!loggedIn) {
@@ -18,6 +21,7 @@ class Companies extends Component {
   }
 
   render() {
+    console.log(this.state);
     return (
       <Container>
         <Header
@@ -64,28 +68,19 @@ class Companies extends Component {
             placeholder="Type Here..."
           />
           <Icon
-            name="sort"
-            type="MaterialCommunityIcons"
+            name={this.state.isSorted ? 'sort-alpha-desc' : 'sort-alpha-asc'}
+            type="font-awesome"
             color="#fff"
             size={35}
             containerStyle={{ flex: 0.1, paddingRight: 8 }}
             onPress={() => {
-              const newArray = JSON.parse(JSON.stringify(this.props.companies)).sort((a, b) => {
-                const nameA = a.name.toUpperCase();
-                const nameB = b.name.toUpperCase();
-                if (nameA < nameB) {
-                  return -1;
-                }
-                if (nameA > nameB) {
-                  return 1;
-                }
-                return 0;
-              });
-              this.props.sortList(newArray);
+              this.props.sortList(this.props.companies, this.state.isSorted);
+              this.setState(previousState => ({ isSorted: !previousState.isSorted }));
             }}
             underlayColor="transparent"
           />
         </View>
+
         <ScrollView contentContainerStyle={{ paddingHorizontal: 0, justifyContent: 'center' }}>
           {this.props.companies.length > 0 ? (
             <List containerStyle={{ marginBottom: 20 }}>

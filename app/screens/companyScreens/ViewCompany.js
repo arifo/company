@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, Dimensions, FlatList } from 'react-
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
+import ViewMoreText from 'react-native-view-more-text';
 
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
@@ -145,6 +146,40 @@ class ViewCompany extends Component {
       </View>
     );
   }
+  renderViewMore(onPress) {
+    return (
+      <View
+        style={{
+          height: 25,
+          marginTop: 5,
+          backgroundColor: '#e2e2e2',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Text onPress={onPress} style={{ fontWeight: '500' }}>
+          View more
+        </Text>
+      </View>
+    );
+  }
+  renderViewLess(onPress) {
+    return (
+      <View
+        style={{
+          height: 25,
+          marginTop: 5,
+          backgroundColor: '#e2e2e2',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Text onPress={onPress} style={{ fontWeight: '500' }}>
+          View less
+        </Text>
+      </View>
+    );
+  }
 
   render() {
     const { name, description, employees, memos } = this.props.navigation.state.params.company;
@@ -159,8 +194,17 @@ class ViewCompany extends Component {
           contentContainerStyle={{ paddingBottom: 40, width: deviceWidth }}
           scrollEnabled={this.state.enableScrollViewScroll}
         >
-          <CustomCard textStyle={{ fontSize: 18, fontWeight: '500' }} text={name} />
-          <CustomCard text={description} />
+          <CustomCard textStyle={{ fontSize: 20, fontWeight: '500' }} text={name} />
+          <CustomCard>
+            <ViewMoreText
+              numberOfLines={5}
+              renderViewMore={this.renderViewMore}
+              renderViewLess={this.renderViewLess}
+              textStyle={{ textAlign: 'justify' }}
+            >
+              <Text>{description}</Text>
+            </ViewMoreText>
+          </CustomCard>
 
           <CustomCard>
             <SegmentControl

@@ -13,9 +13,9 @@ export const signUpAction = (values, bag) => async dispatch => {
     });
   } catch (error) {
     dispatch(() => {
-      // bag.setSubmitting(false);
+      bag.setSubmitting(false);
       if (error.code === 'auth/email-already-in-use') {
-        //    bag.setErrors({ email: error.message });
+        bag.setErrors({ email: error.message });
       }
     });
   }
@@ -28,8 +28,8 @@ export const loginAction = (values, bag) => async dispatch => {
     dispatch({ type: LOGIN, loggedIn: true });
   } catch (error) {
     dispatch(() => {
-      //   bag.setSubmitting(false);
-      //   bag.setErrors({ email: error.message });
+      bag.setSubmitting(false);
+      bag.setErrors({ email: error.message });
     });
   }
 };
@@ -46,8 +46,8 @@ export const forgotPassAction = (values, bag, navigation) => async dispatch => {
     );
   } catch (error) {
     dispatch(() => {
-      //  bag.setSubmitting(false);
-      //  bag.setErrors({ email: error.message });
+      bag.setSubmitting(false);
+      bag.setErrors({ email: error.message });
     });
   }
 };
