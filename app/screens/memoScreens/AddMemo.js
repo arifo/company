@@ -15,7 +15,6 @@ class AddMemo extends Component {
     this.noteTextInput = null;
   }
   onSave = async values => {
-    console.log(JSON.stringify(values));
     this.props.navigation.navigate('ViewMemo', {
       title: `${values.title}`
     });

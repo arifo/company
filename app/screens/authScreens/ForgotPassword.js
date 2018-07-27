@@ -4,13 +4,13 @@ import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
+import { forgotPassAction } from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
 
 class ForgotPassword extends React.Component {
-  handleSubmit = values => {
-    console.log(JSON.stringify(values));
-    this.props.navigation.goBack();
+  handleSubmit = (values, bag) => {
+    this.props.forgotPassAction(values, bag, this.props.navigation);
   };
 
   render() {
@@ -81,4 +81,7 @@ const mapStateToProps = state => ({
   loggedIn: state.auth.loggedIn
 });
 
-export default connect(mapStateToProps)(ForgotPassword);
+export default connect(
+  mapStateToProps,
+  { forgotPassAction }
+)(ForgotPassword);

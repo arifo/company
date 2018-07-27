@@ -1,7 +1,7 @@
 import { LOGIN, LOGOUT, SIGNUP } from '../actions/types';
 
 const initialState = {
-  loggedIn: false
+  loggedIn: true
 };
 
 export default (state = initialState, action) => {

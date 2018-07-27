@@ -1,24 +1,12 @@
 import React, { Component } from 'react';
 import { Button, Text, Card } from 'react-native-elements';
-import { Alert } from 'react-native';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
-import { loginAction } from '../../redux/actions';
+import { signUpAction } from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
-
-const api = user =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (user.email === '123@123.com') {
-        reject({ email: 'Email already exists' });
-      } else {
-        resolve();
-      }
-    }, 3000);
-  });
 
 class SignUpScreen extends Component {
   constructor(props) {
@@ -26,25 +14,21 @@ class SignUpScreen extends Component {
     this.passTextInput = null;
     this.confirmPassTextInput = null;
   }
-  onSignUp = async (values, bag) => {
-    try {
-      await api(values);
-      this.props.loginAction();
-      if (this.props.loggedIn) {
-        this.props.navigation.navigate('App');
-      }
-      Alert.alert('Welcome User');
-    } catch (error) {
-      bag.setSubmitting(false);
-      bag.setErrors(error);
+  componentDidUpdate() {
+    const { loggedIn, navigation } = this.props;
+    if (loggedIn) {
+      navigation.navigate('App');
     }
+  }
+
+  onSignUp = (values, bag) => {
+    this.props.signUpAction(values, bag);
   };
 
   render() {
     return (
       <Container
         style={{
-          flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#ffffff'
@@ -130,6 +114,7 @@ class SignUpScreen extends Component {
                 title="Sign Up"
                 buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
                 loading={isSubmitting}
+                disabled={isSubmitting}
                 onPress={handleSubmit}
               />
             </Card>
@@ -153,5 +138,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { loginAction }
+  { signUpAction }
 )(SignUpScreen);

@@ -12,9 +12,7 @@ const TEMP_MEMO = {
 };
 
 class ViewMemo extends Component {
-  onSave = values => {
-    console.log(JSON.stringify(values));
-  };
+  onSave = values => {};
 
   render() {
     return (

@@ -11,14 +11,11 @@ import InputForm from '../../components/InputForm';
 
 class EditEmployee extends Component {
   onSave = values => {
-    console.log(JSON.stringify(values));
     this.props.navigation.navigate('ViewEmployee', {
       title: `${values.name}`
     });
   };
-  onDelete = () => {
-    console.log('Company Deleted');
-  };
+  onDelete = () => {};
   render() {
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>

@@ -16,9 +16,7 @@ const TEMP_EMPLOYEE = {
 };
 
 class ViewEmployee extends Component {
-  onSave = values => {
-    console.log(JSON.stringify(values));
-  };
+  onSave = values => {};
 
   render() {
     return (

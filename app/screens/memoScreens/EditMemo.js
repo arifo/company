@@ -11,15 +11,12 @@ import InputForm from '../../components/InputForm';
 
 class AddMemo extends Component {
   onSave = async values => {
-    console.log(JSON.stringify(values));
     this.props.navigation.navigate('ViewMemo', {
       title: `${values.title}`
     });
   };
 
-  onDelete = () => {
-    console.log('Company Deleted');
-  };
+  onDelete = () => {};
   render() {
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>

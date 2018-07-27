@@ -17,7 +17,6 @@ class AddEmployee extends Component {
     this.depTextInput = null;
   }
   onSave = values => {
-    console.log(JSON.stringify(values));
     this.props.navigation.replace('ViewEmployee', {
       title: `${values.name}`
     });

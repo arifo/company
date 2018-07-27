@@ -9,7 +9,6 @@ import ForgotPassword from '../screens/authScreens/ForgotPassword';
 import Companies from '../screens/Companies';
 import ViewCompany from '../screens/companyScreens/ViewCompany';
 import AddCompany from '../screens/companyScreens/AddCompany';
-import EditCompany from '../screens/companyScreens/EditCompany';
 import AddEmployee from '../screens/employeeScreens/AddEmployee';
 import ViewEmployee from '../screens/employeeScreens/ViewEmployee';
 import EditEmployee from '../screens/employeeScreens/EditEmployee';
@@ -63,26 +62,12 @@ const AppStack = createStackNavigator(
             color="#0082C0"
             size={35}
             onPress={() =>
-              navigation.navigate('EditCompany', {
-                title: `Edit ${navigation.state.params.title}`
+              navigation.navigate('AddCompany', {
+                title: `Edit ${navigation.state.params.title}`,
+                type: 'edit',
+                company: navigation.state.params.company
               })
             }
-          />
-        ),
-        headerRightContainerStyle: { padding: 15 }
-      })
-    },
-    EditCompany: {
-      screen: EditCompany,
-      navigationOptions: ({ navigation }) => ({
-        headerTitle: navigation.state.params.title,
-        headerRight: (
-          <Icon
-            name="save"
-            type="entypo"
-            color="#0082C0"
-            size={35}
-            onPress={() => navigation.goBack()}
           />
         ),
         headerRightContainerStyle: { padding: 15 }

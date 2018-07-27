@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Alert, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Button, Text, Card } from 'react-native-elements';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
@@ -9,34 +9,19 @@ import { loginAction } from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
 
-const api = user =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (user.email === '123@123.com') {
-        reject({ email: 'Email already exists' });
-      } else {
-        resolve();
-      }
-    }, 3000);
-  });
-
 class LoginScreen extends Component {
   constructor(props) {
     super(props);
     this.passTextInput = null;
   }
-  onLogin = async (values, bag) => {
-    try {
-      await api(values);
-      this.props.loginAction();
-      if (this.props.loggedIn) {
-        this.props.navigation.navigate('App');
-      }
-      Alert.alert('Welcome User');
-    } catch (error) {
-      bag.setSubmitting(false);
-      bag.setErrors(error);
+  componentDidUpdate() {
+    const { loggedIn, navigation } = this.props;
+    if (loggedIn) {
+      navigation.navigate('App');
     }
+  }
+  onLogin = (values, bag) => {
+    this.props.loginAction(values, bag);
   };
 
   render() {
