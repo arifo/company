@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
-import { PlatformIOS, ScrollView, TouchableOpacity, View, Dimensions, Picker } from 'react-native';
-import { Header, Icon, List, ListItem, SearchBar, Text } from 'react-native-elements';
+import { PlatformIOS, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Header, Icon, List, ListItem, SearchBar } from 'react-native-elements';
 import { connect } from 'react-redux';
 
 import { logoutAction, sortList } from '../redux/actions';
 
 import Container from '../components/Container';
-
-const deviceWidth = Dimensions.get('screen').width;
+import AddImageBox from '../components/AddImageBox';
 
 class Companies extends Component {
   state = {
@@ -21,7 +20,6 @@ class Companies extends Component {
   }
 
   render() {
-    console.log(this.state);
     return (
       <Container>
         <Header
@@ -99,46 +97,18 @@ class Companies extends Component {
               ))}
             </List>
           ) : (
-            <TouchableOpacity
-              style={{
-                alignSelf: 'center',
-                width: deviceWidth * 0.45,
-                height: deviceWidth * 0.45,
-                borderWidth: 3,
-                borderColor: '#d4d5d6',
-                borderRadius: 5,
-                margin: 4,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#e5e8ea',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.5,
-                shadowRadius: 5,
-                elevation: 5
-              }}
+            <AddImageBox
+              size={0.45}
+              iconType="entypo"
+              iconName="add-to-list"
+              iconSize={100}
+              text="Add Company"
               onPress={() =>
                 this.props.navigation.navigate('AddCompany', {
                   title: 'New Company'
                 })
               }
-            >
-              <Icon
-                type="entypo"
-                name="add-to-list"
-                color={'#b7bbbf'}
-                size={80}
-                underlayColor="transparent"
-              />
-              <Text
-                style={{
-                  // fontSize: 12,
-                  color: '#b7bbbf'
-                }}
-              >
-                Add company
-              </Text>
-            </TouchableOpacity>
+            />
           )}
         </ScrollView>
       </Container>

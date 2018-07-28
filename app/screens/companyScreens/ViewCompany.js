@@ -4,12 +4,12 @@ import { Button, Text, Icon, Avatar } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
-
-import moment from 'moment';
+import _ from 'lodash';
 
 import { sortMemoList } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
+import AddImageBox from '../../components/AddImageBox';
 
 const deviceHeight = Dimensions.get('screen').height;
 const deviceWidth = Dimensions.get('screen').width;
@@ -19,7 +19,7 @@ class ViewCompany extends Component {
     index: 0,
     isTabOneShowing: true,
     enableScrollViewScroll: true,
-    isSorted: false
+    sortKey: 'asc'
   };
 
   handlePress(index) {
@@ -96,38 +96,17 @@ class ViewCompany extends Component {
               )}
             />
           ) : (
-            <TouchableOpacity
-              style={{
-                alignSelf: 'center',
-                width: deviceWidth * 0.45,
-                height: deviceWidth * 0.45,
-                borderWidth: 3,
-                borderColor: '#d4d5d6',
-                borderRadius: 5,
-                margin: 4,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#e5e8ea',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.5,
-                shadowRadius: 5,
-                elevation: 5
-              }}
+            <AddImageBox
+              size={0.45}
+              iconType="entypo"
+              iconName="add-user"
+              iconSize={80}
               onPress={() =>
                 this.props.navigation.navigate('AddEmployee', {
                   title: 'New employee'
                 })
               }
-            >
-              <Icon
-                type="entypo"
-                name="add-user"
-                color={'#b7bbbf'}
-                size={80}
-                underlayColor="transparent"
-              />
-            </TouchableOpacity>
+            />
           )}
         </View>
 
@@ -143,33 +122,54 @@ class ViewCompany extends Component {
       </View>
     );
   }
+
   renderMemoTab() {
+    const { memos } = this.props.navigation.state.params.company;
+    const data = _.orderBy(memos, ['createdAt'], [this.state.sortKey]);
     return (
       <View style={{ marginTop: 20, height: deviceHeight * 0.5 }}>
         <View
-          style={{ height: deviceHeight * 0.4 }}
+          style={{ height: deviceHeight * 0.4, justifyContent: 'center' }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
         >
-          <FlatList
-            data={this.props.navigation.state.params.company.memos}
-            keyExtractor={(item, index) => `${index}`}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() =>
-                  this.props.navigation.navigate('ViewMemo', {
-                    title: `${item.title}`
-                  })
-                }
-              >
-                <View style={{ borderBottomWidth: 1, borderBottomColor: '#b2b2b2', padding: 13 }}>
-                  <Text style={{ color: '#39393d', fontWeight: '500' }}>{item.title}</Text>
-                  <Text style={{ color: '#39393d' }}>{item.createdAt}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
+          {data.length > 0 ? (
+            <FlatList
+              data={data}
+              keyExtractor={(item, index) => `${index}`}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() =>
+                    this.props.navigation.navigate('ViewMemo', {
+                      title: `${item.title}`,
+                      company: item
+                    })
+                  }
+                >
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#b2b2b2', padding: 13 }}>
+                    <Text numberOfLines={1} style={{ color: '#39393d', fontWeight: '500' }}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ color: '#39393d' }}>{item.createdAt}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <AddImageBox
+              size={0.45}
+              iconType="MaterialIcons"
+              iconName="note-add"
+              iconSize={80}
+              onPress={() =>
+                this.props.navigation.navigate('AddMemo', {
+                  title: 'New memo',
+                  company: this.props.navigation.state.params.company
+                })
+              }
+            />
+          )}
         </View>
         <View style={{ flexDirection: 'row', width: '100%' }}>
           <Button
@@ -178,7 +178,8 @@ class ViewCompany extends Component {
             buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
             onPress={() =>
               this.props.navigation.navigate('AddMemo', {
-                title: 'New memo'
+                title: 'New memo',
+                company: this.props.navigation.state.params.company
               })
             }
           />
@@ -189,10 +190,9 @@ class ViewCompany extends Component {
             size={35}
             containerStyle={{ flex: 0.1, paddingRight: 8 }}
             onPress={() => {
-              const { company } = this.props.navigation.state.params;
-              const newObj = JSON.parse(JSON.stringify(company));
-              this.props.sortMemoList(newObj, this.state.isSorted);
-              this.setState(previousState => ({ isSorted: !previousState.isSorted }));
+              this.setState(previousState => ({
+                sortKey: previousState.sortKey === 'asc' ? 'desc' : 'asc'
+              }));
             }}
             underlayColor="transparent"
           />

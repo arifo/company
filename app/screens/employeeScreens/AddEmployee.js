@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Rating } from 'react-native-elements';
+import { Button, Card, FormLabel, Slider, Text } from 'react-native-elements';
 import { ScrollView, View } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
+import { connect } from 'react-redux';
 
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
+import AddImageBox from '../../components/AddImageBox';
 
 class AddEmployee extends Component {
   constructor(props) {
@@ -33,7 +35,7 @@ class AddEmployee extends Component {
               email: '',
               department: '',
               joinDate: '',
-              rating: 2.5
+              rating: 10
             }}
             onSubmit={this.onSave}
             validationSchema={Yup.object().shape({
@@ -48,6 +50,12 @@ class AddEmployee extends Component {
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%', marginBottom: 20 }}>
+                <AddImageBox
+                  size={0.35}
+                  iconType="MaterialIcons"
+                  iconName="add-a-photo"
+                  iconSize={85}
+                />
                 <InputForm
                   label="Name"
                   placeholder="Employee name..."
@@ -143,21 +151,37 @@ class AddEmployee extends Component {
                 </View>
                 <View
                   style={{
-                    alignItems: 'center',
+                    alignItems: 'flex-end',
                     flexDirection: 'row',
-                    justifyContent: 'space-between',
                     marginVertical: 8,
                     paddingRight: 13
                   }}
                 >
                   <FormLabel>Rating</FormLabel>
-                  <Rating
-                    type="star"
-                    fractions={1}
-                    startingValue={values.rating}
-                    imageSize={25}
-                    onFinishRating={setFieldValue}
-                    style={{ paddingVertical: 10 }}
+
+                  <Text style={{ fontSize: 18, fontWeight: '500' }}>{values.rating}</Text>
+                </View>
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: 'stretch',
+                    justifyContent: 'center',
+                    marginBottom: 30
+                  }}
+                >
+                  <Slider
+                    value={values.rating}
+                    onValueChange={rate => setFieldValue('rating', rate)}
+                    minimumValue={0}
+                    maximumValue={100}
+                    step={5}
+                    thumbStyle={{
+                      width: 20,
+                      height: 30,
+                      borderRadius: 1,
+                      backgroundColor: '#838486'
+                    }}
+                    minimumTrackTintColor="#ec4c46"
                   />
                 </View>
                 <Button
@@ -175,4 +199,8 @@ class AddEmployee extends Component {
   }
 }
 
-export default AddEmployee;
+const mapStateToProps = state => ({
+  company: state.app.companies
+});
+
+export default connect(mapStateToProps)(AddEmployee);

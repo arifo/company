@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, Alert, TextInput } from 'react-native';
 import { Button, Card, FormLabel } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { connect } from 'react-redux';
 import DatePicker from 'react-native-datepicker';
+import ModalSelector from 'react-native-modal-selector';
 import moment from 'moment';
 
 import Container from '../../components/Container';
@@ -12,6 +14,9 @@ import InputForm from '../../components/InputForm';
 class AddMemo extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      textInputValue: ''
+    };
     this.noteTextInput = null;
   }
   onSave = async values => {
@@ -21,6 +26,8 @@ class AddMemo extends Component {
   };
 
   render() {
+    const { employees } = this.props.navigation.state.params.company;
+
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }}>
@@ -34,6 +41,17 @@ class AddMemo extends Component {
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%' }}>
+                <ModalSelector
+                  keyExtractor={employee => `${employee.id}`}
+                  labelExtractor={employee => `${employee.name}`}
+                  data={employees}
+                  touchableStyle={{}}
+                  initValue="Select contact"
+                  onChange={option => {
+                    console.log(JSON.stringify(option));
+                    alert(`${option.name} (${option})`);
+                  }}
+                />
                 <InputForm
                   label="Memo"
                   placeholder="memo title..."
@@ -107,4 +125,8 @@ class AddMemo extends Component {
   }
 }
 
-export default AddMemo;
+const mapStateToProps = state => ({
+  companie: state.app.companies
+});
+
+export default connect(mapStateToProps)(AddMemo);

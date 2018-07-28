@@ -34,12 +34,7 @@ class ViewEmployee extends Component {
             text={moment(employees[0].joinDate, 'MM/DD/YYYY').format('MMMM Do YYYY')}
           />
           <CustomCard label="Rating">
-            <Rating
-              ratingCount={10}
-              imageSize={20}
-              readonly
-              startingValue={employees[0].rating / 10}
-            />
+            <Rating ratingCount={10} imageSize={20} readonly startingValue={employees[0].rating} />
           </CustomCard>
           <CustomCard label="Contact created">
             <Text>{employees[0].createdAt}</Text>
