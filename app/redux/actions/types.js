@@ -6,3 +6,5 @@ export const ADD_COMPANY = 'ADD_COMPANY';
 export const EDIT_COMPANY = 'EDIT_COMPANY';
 export const DELETE_COMPANY = 'DELETE_COMPANY';
 export const SORT_A_TO_Z = 'SORT_A_TO_Z';
+
+export const SORT_MEMOS = 'SORT_MEMOS';

@@ -50,6 +50,7 @@ class AddMemo extends Component {
                 <InputForm
                   label="Note"
                   placeholder="note ..."
+                  multiline
                   returnKeyType={'done'}
                   inputRef={input => {
                     this.noteTextInput = input;
@@ -72,14 +73,13 @@ class AddMemo extends Component {
                 >
                   <FormLabel>Remider</FormLabel>
                   <DatePicker
-                    style={{ width: 150 }}
+                    style={{ width: 200 }}
                     date={values.reminder}
-                    mode="date"
+                    mode="datetime"
                     androidMode="spinner"
-                    placeholder="MM/DD/YYYY"
-                    format="MM/DD/YYYY"
+                    placeholder="MM/DD/YYYY HH:mm"
+                    format="MM/DD/YYYY HH:mm"
                     minDate="01-01-1920"
-                    maxDate={moment(new Date()).format('MM/DD/YYYY')}
                     confirmBtnText="Confirm"
                     cancelBtnText="Cancel"
                     customStyles={{

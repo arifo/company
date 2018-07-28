@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { View, ScrollView, TouchableOpacity, Dimensions, FlatList } from 'react-native';
-import { Button, Text, Icon } from 'react-native-elements';
+import { Button, Text, Icon, Avatar } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
 
+import moment from 'moment';
+
+import { sortMemoList } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
@@ -15,7 +18,8 @@ class ViewCompany extends Component {
   state = {
     index: 0,
     isTabOneShowing: true,
-    enableScrollViewScroll: true
+    enableScrollViewScroll: true,
+    isSorted: false
   };
 
   handlePress(index) {
@@ -52,8 +56,41 @@ class ViewCompany extends Component {
                     })
                   }
                 >
-                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#b2b2b2', padding: 13 }}>
-                    <Text style={{ color: '#39393d' }}>{item.name}</Text>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#b2b2b2',
+                      padding: 13,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Avatar
+                      medium
+                      rounded
+                      source={{ uri: item.avatar }}
+                      //containerStyle={{ flex: 0.18 }}
+                      // onPress={() => console.log('Works!')}
+                      activeOpacity={0.7}
+                    />
+                    <Text
+                      style={{ flex: 0.9, color: '#39393d', fontSize: 16, paddingHorizontal: 15 }}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text>
+                      rating:{' '}
+                      <Text
+                        style={{
+                          // flex: 0.2,
+                          color: '#39393d',
+                          fontSize: 16,
+                          paddingHorizontal: 15
+                        }}
+                      >
+                        {item.rating}
+                      </Text>
+                    </Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -127,22 +164,39 @@ class ViewCompany extends Component {
                 }
               >
                 <View style={{ borderBottomWidth: 1, borderBottomColor: '#b2b2b2', padding: 13 }}>
-                  <Text style={{ color: '#39393d' }}>{item.title}</Text>
+                  <Text style={{ color: '#39393d', fontWeight: '500' }}>{item.title}</Text>
+                  <Text style={{ color: '#39393d' }}>{item.createdAt}</Text>
                 </View>
               </TouchableOpacity>
             )}
           />
         </View>
-
-        <Button
-          title="Add memo"
-          buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-          onPress={() =>
-            this.props.navigation.navigate('AddMemo', {
-              title: 'New memo'
-            })
-          }
-        />
+        <View style={{ flexDirection: 'row', width: '100%' }}>
+          <Button
+            title="Add memo"
+            containerViewStyle={{ flex: 0.9 }}
+            buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
+            onPress={() =>
+              this.props.navigation.navigate('AddMemo', {
+                title: 'New memo'
+              })
+            }
+          />
+          <Icon
+            name={this.state.isSorted ? 'angle-double-down' : 'angle-double-up'}
+            type="font-awesome"
+            color="#6f7172"
+            size={35}
+            containerStyle={{ flex: 0.1, paddingRight: 8 }}
+            onPress={() => {
+              const { company } = this.props.navigation.state.params;
+              const newObj = JSON.parse(JSON.stringify(company));
+              this.props.sortMemoList(newObj, this.state.isSorted);
+              this.setState(previousState => ({ isSorted: !previousState.isSorted }));
+            }}
+            underlayColor="transparent"
+          />
+        </View>
       </View>
     );
   }
@@ -183,6 +237,7 @@ class ViewCompany extends Component {
 
   render() {
     const { name, description, employees, memos } = this.props.navigation.state.params.company;
+    // console.log('state memos', memos);
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -231,5 +286,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  {}
+  { sortMemoList }
 )(ViewCompany);
