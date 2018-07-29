@@ -48,7 +48,7 @@ class AddMemo extends Component {
     const { employees } = this.props.navigation.state.params.company;
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
-        <ScrollView style={{ width: '100%' }}>
+        <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={{ title: '', note: '', reminder: '', reminders: [] }}
             onSubmit={this.onSave}

@@ -6,6 +6,7 @@ const deviceWidth = Dimensions.get('screen').width;
 
 const AddImageBox = ({ onPress, size, iconType, iconName, iconSize, text }) => (
   <TouchableOpacity
+    activeOpacity={0.8}
     style={[styles.container, { width: deviceWidth * size, height: deviceWidth * size }]}
     onPress={onPress}
   >

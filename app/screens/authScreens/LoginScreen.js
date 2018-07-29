@@ -32,7 +32,11 @@ class LoginScreen extends Component {
           backgroundColor: '#ffffff'
         }}
       >
-        <ScrollView style={{ width: '100%' }} contentContainerStyle={{ alignItems: 'center' }}>
+        <ScrollView
+          style={{ width: '100%' }}
+          contentContainerStyle={{ alignItems: 'center' }}
+          keyboardShouldPersistTaps="always"
+        >
           <Text style={{ fontSize: 26, fontWeight: '600', marginVertical: 50 }}>Login</Text>
           <Formik
             initialValues={{ email: '', password: '' }}
@@ -54,7 +58,7 @@ class LoginScreen extends Component {
               setFieldTouched,
               isSubmitting
             }) => (
-              <Card>
+              <Card containerStyle={{ width: '100%' }}>
                 <InputForm
                   label="Email"
                   placeholder="example@example.com"

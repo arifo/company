@@ -110,7 +110,7 @@ class AddCompany extends Component {
     const { type, company } = this.props.navigation.state.params;
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
-        <ScrollView style={{ width: deviceWidth }}>
+        <ScrollView style={{ width: deviceWidth }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={
               type === 'edit'

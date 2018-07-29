@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { View, ScrollView, TouchableOpacity, Dimensions, FlatList } from 'react-native';
-import { Button, Text, Icon, Avatar } from 'react-native-elements';
+import { View, ScrollView, Dimensions } from 'react-native';
+import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
@@ -10,6 +10,7 @@ import { sortMemoList } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 import AddImageBox from '../../components/AddImageBox';
+import CustomFlatList from '../../components/CustomFlatList';
 
 const deviceHeight = Dimensions.get('screen').height;
 const deviceWidth = Dimensions.get('screen').width;
@@ -22,90 +23,51 @@ class ViewCompany extends Component {
     sortKey: 'asc'
   };
 
-  handlePress(index) {
+  handleTabSwitch(index) {
     this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
   }
+
+  onEmployeeSelect = item =>
+    this.props.navigation.navigate('ViewEmployee', {
+      title: `${item.name}`
+    });
+
+  onAddEmployee = () =>
+    this.props.navigation.navigate('AddEmployee', {
+      title: 'New employee'
+    });
+
+  onMemoSelect = item =>
+    this.props.navigation.navigate('ViewMemo', {
+      title: `${item.title}`,
+      company: item
+    });
+
+  onAddMemo = () =>
+    this.props.navigation.navigate('AddMemo', {
+      title: 'New memo',
+      company: this.props.navigation.state.params.company
+    });
 
   renderEmployeeTab() {
     const { employees } = this.props.navigation.state.params.company;
     return (
-      <View
-        style={{
-          marginTop: 20,
-          height: deviceHeight * 0.5
-        }}
-      >
+      <View style={{ marginTop: 20, height: deviceHeight * 0.5 }}>
         <View
-          style={{
-            height: deviceHeight * 0.4,
-            justifyContent: 'center'
-          }}
+          style={{ height: deviceHeight * 0.4, justifyContent: 'center' }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
         >
           {employees.length > 0 ? (
-            <FlatList
-              data={employees}
-              keyExtractor={(item, index) => `${index}`}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    this.props.navigation.navigate('ViewEmployee', {
-                      title: `${item.name}`
-                    })
-                  }
-                >
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      borderBottomWidth: 1,
-                      borderBottomColor: '#b2b2b2',
-                      padding: 13,
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Avatar
-                      medium
-                      rounded
-                      source={{ uri: item.avatar }}
-                      //containerStyle={{ flex: 0.18 }}
-                      // onPress={() => console.log('Works!')}
-                      activeOpacity={0.7}
-                    />
-                    <Text
-                      style={{ flex: 0.9, color: '#39393d', fontSize: 16, paddingHorizontal: 15 }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text>
-                      rating:{' '}
-                      <Text
-                        style={{
-                          // flex: 0.2,
-                          color: '#39393d',
-                          fontSize: 16,
-                          paddingHorizontal: 15
-                        }}
-                      >
-                        {item.rating}
-                      </Text>
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            <CustomFlatList data={employees} onPress={this.onEmployeeSelect} />
           ) : (
             <AddImageBox
               size={0.45}
               iconType="entypo"
               iconName="add-user"
               iconSize={80}
-              onPress={() =>
-                this.props.navigation.navigate('AddEmployee', {
-                  title: 'New employee'
-                })
-              }
+              onPress={this.onAddEmployee}
             />
           )}
         </View>
@@ -113,11 +75,7 @@ class ViewCompany extends Component {
         <Button
           title="Add employee"
           buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-          onPress={() =>
-            this.props.navigation.navigate('AddEmployee', {
-              title: 'New employee'
-            })
-          }
+          onPress={this.onAddEmployee}
         />
       </View>
     );
@@ -135,39 +93,14 @@ class ViewCompany extends Component {
           }}
         >
           {data.length > 0 ? (
-            <FlatList
-              data={data}
-              keyExtractor={(item, index) => `${index}`}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    this.props.navigation.navigate('ViewMemo', {
-                      title: `${item.title}`,
-                      company: item
-                    })
-                  }
-                >
-                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#b2b2b2', padding: 13 }}>
-                    <Text numberOfLines={1} style={{ color: '#39393d', fontWeight: '500' }}>
-                      {item.title}
-                    </Text>
-                    <Text style={{ color: '#39393d' }}>{item.createdAt}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            <CustomFlatList isMemoTab data={data} onPress={this.onMemoSelect} />
           ) : (
             <AddImageBox
               size={0.45}
               iconType="MaterialIcons"
               iconName="note-add"
               iconSize={80}
-              onPress={() =>
-                this.props.navigation.navigate('AddMemo', {
-                  title: 'New memo',
-                  company: this.props.navigation.state.params.company
-                })
-              }
+              onPress={this.onAddMemo}
             />
           )}
         </View>
@@ -176,15 +109,10 @@ class ViewCompany extends Component {
             title="Add memo"
             containerViewStyle={{ flex: 0.9 }}
             buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-            onPress={() =>
-              this.props.navigation.navigate('AddMemo', {
-                title: 'New memo',
-                company: this.props.navigation.state.params.company
-              })
-            }
+            onPress={this.onAddMemo}
           />
           <Icon
-            name={this.state.isSorted ? 'angle-double-down' : 'angle-double-up'}
+            name={this.state.sortKey === 'asc' ? 'angle-double-up' : 'angle-double-down'}
             type="font-awesome"
             color="#6f7172"
             size={35}
@@ -202,15 +130,7 @@ class ViewCompany extends Component {
   }
   renderViewMore(onPress) {
     return (
-      <View
-        style={{
-          height: 25,
-          marginTop: 5,
-          backgroundColor: '#e2e2e2',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
+      <View style={styles.viewMoreLessStyle}>
         <Text onPress={onPress} style={{ fontWeight: '500' }}>
           View more
         </Text>
@@ -219,15 +139,7 @@ class ViewCompany extends Component {
   }
   renderViewLess(onPress) {
     return (
-      <View
-        style={{
-          height: 25,
-          marginTop: 5,
-          backgroundColor: '#e2e2e2',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
+      <View style={styles.viewMoreLessStyle}>
         <Text onPress={onPress} style={{ fontWeight: '500' }}>
           View less
         </Text>
@@ -237,7 +149,6 @@ class ViewCompany extends Component {
 
   render() {
     const { name, description, employees, memos } = this.props.navigation.state.params.company;
-    // console.log('state memos', memos);
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -267,7 +178,7 @@ class ViewCompany extends Component {
               badges={[employees.length, memos.length]}
               selectedIndex={this.state.index}
               height={40}
-              onTabPress={this.handlePress.bind(this)}
+              onTabPress={this.handleTabSwitch.bind(this)}
               borderRadius={5}
               tabBadgeContainerStyle={{ backgroundColor: 'red' }}
             />
@@ -288,3 +199,13 @@ export default connect(
   mapStateToProps,
   { sortMemoList }
 )(ViewCompany);
+
+const styles = {
+  viewMoreLessStyle: {
+    height: 25,
+    marginTop: 5,
+    backgroundColor: '#e2e2e2',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+};

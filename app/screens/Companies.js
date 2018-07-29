@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { PlatformIOS, ScrollView, TouchableOpacity, View } from 'react-native';
+import { PlatformIOS, ScrollView, TouchableOpacity, View, FlatList } from 'react-native';
 import { Header, Icon, List, ListItem, SearchBar } from 'react-native-elements';
 import { connect } from 'react-redux';
+import _ from 'lodash';
 
 import { logoutAction, sortList } from '../redux/actions';
 
@@ -10,7 +11,8 @@ import AddImageBox from '../components/AddImageBox';
 
 class Companies extends Component {
   state = {
-    isSorted: false
+    sortKey: 'asc',
+    value: ''
   };
   componentDidUpdate() {
     const { loggedIn, navigation } = this.props;
@@ -19,7 +21,31 @@ class Companies extends Component {
     }
   }
 
+  onChangeText = value => {
+    this.setState({ value });
+  };
+
+  onListItemPress = l => {
+    this.props.navigation.navigate('ViewCompany', {
+      title: l.name,
+      company: l
+    });
+  };
+
+  onAddImagePress = () => {
+    this.props.navigation.navigate('AddCompany', {
+      title: 'New Company'
+    });
+  };
+
   render() {
+    const { companies } = this.props;
+    const data = _
+      .chain(companies)
+      .orderBy(['name'], [this.state.sortKey])
+      .filter(item => item.name.includes(this.state.value))
+      .value();
+
     return (
       <Container>
         <Header
@@ -28,21 +54,21 @@ class Companies extends Component {
               type="ionicon"
               name={PlatformIOS ? 'ios-log-out' : 'md-log-out'}
               color="#fff"
-              size={35}
+              size={25}
               onPress={() => this.props.logoutAction()}
               underlayColor="transparent"
             />
           }
           centerComponent={{
-            text: 'Company',
-            style: { color: '#fff', fontSize: 16, fontWeight: '500' }
+            text: 'Companies',
+            style: { color: '#fff', fontSize: 20, fontWeight: '500' }
           }}
           rightComponent={
             <Icon
               name={PlatformIOS ? 'ios-add-circle' : 'md-add-circle'}
               type="ionicon"
               color="#fff"
-              size={35}
+              size={25}
               onPress={() =>
                 this.props.navigation.navigate('AddCompany', {
                   title: 'New Company'
@@ -55,62 +81,52 @@ class Companies extends Component {
         />
         <View style={{ flexDirection: 'row' }}>
           <SearchBar
+            value={this.state.value}
             lightTheme
             showLoading
             containerStyle={{ backgroundColor: '#e0e0e2', flex: 0.9 }}
             platform={PlatformIOS ? 'ios' : 'android'}
             searchIcon={{ size: 24 }}
             clearIcon={{ color: 'grey' }}
-            onChangeText={t => t}
+            onChangeText={this.onChangeText}
             onClear={t => t}
             placeholder="Type Here..."
           />
           <Icon
-            name={this.state.isSorted ? 'sort-alpha-desc' : 'sort-alpha-asc'}
-            type="font-awesome"
+            name={this.state.sortKey === 'asc' ? 'sort-ascending' : 'sort-descending'}
+            type="material-community"
             color="#fff"
             size={35}
             containerStyle={{ flex: 0.1, paddingRight: 8 }}
             onPress={() => {
-              this.props.sortList(this.props.companies, this.state.isSorted);
-              this.setState(previousState => ({ isSorted: !previousState.isSorted }));
+              this.setState(previousState => ({
+                sortKey: previousState.sortKey === 'asc' ? 'desc' : 'asc'
+              }));
             }}
             underlayColor="transparent"
           />
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 0, justifyContent: 'center' }}>
-          {this.props.companies.length > 0 ? (
-            <List containerStyle={{ marginBottom: 20 }}>
-              {this.props.companies.map((l, i) => (
-                <ListItem
-                  key={i}
-                  title={l.name}
-                  onPress={() => {
-                    this.props.navigation.navigate('ViewCompany', {
-                      title: `${l.name}`,
-                      company: l
-                    });
-                  }}
-                  component={TouchableOpacity}
-                />
-              ))}
-            </List>
-          ) : (
-            <AddImageBox
-              size={0.45}
-              iconType="entypo"
-              iconName="add-to-list"
-              iconSize={100}
-              text="Add Company"
-              onPress={() =>
-                this.props.navigation.navigate('AddCompany', {
-                  title: 'New Company'
-                })
-              }
-            />
-          )}
-        </ScrollView>
+        {this.props.companies.length > 0 ? (
+          <FlatList
+            data={data}
+            contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff', marginHorizontal: 10 }}
+            component={TouchableOpacity}
+            renderItem={({ item }) => (
+              <ListItem title={item.name} onPress={() => this.onListItemPress(item)} />
+            )}
+            keyExtractor={(item, index) => index.toString()}
+          />
+        ) : (
+          <AddImageBox
+            size={0.45}
+            iconType="entypo"
+            iconName="add-to-list"
+            iconSize={100}
+            text="Add Company"
+            onPress={this.onAddImagePress}
+          />
+        )}
       </Container>
     );
   }

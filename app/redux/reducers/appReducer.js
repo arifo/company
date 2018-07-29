@@ -1,10 +1,4 @@
-import {
-  ADD_COMPANY,
-  EDIT_COMPANY,
-  DELETE_COMPANY,
-  SORT_A_TO_Z,
-  SORT_MEMOS
-} from '../actions/types';
+import { ADD_COMPANY, EDIT_COMPANY, DELETE_COMPANY } from '../actions/types';
 
 // const initialState = {
 //   companies: [
@@ -324,15 +318,6 @@ export default (state = initialState, action) => {
     case EDIT_COMPANY: {
       return { ...state, companies: action.payload };
     }
-    case SORT_A_TO_Z: {
-      console.log('Sort_COMPANY', action.payload);
-      return { ...state, companies: action.payload };
-    }
-    // case SORT_MEMOS: {
-    //   console.log('Sort_MEMOS', action.payload);
-    //   return { ...state,
-    //     companies: { ...state.companies, action.payload } };
-    // }
     default:
       return state;
   }

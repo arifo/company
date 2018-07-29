@@ -60,7 +60,7 @@ const AppStack = createStackNavigator(
             name="edit"
             type="feather"
             color="#0082C0"
-            size={35}
+            size={25}
             onPress={() =>
               navigation.navigate('AddCompany', {
                 title: `Edit ${navigation.state.params.title}`,
@@ -88,7 +88,7 @@ const AppStack = createStackNavigator(
             name="edit"
             type="feather"
             color="#0082C0"
-            size={35}
+            size={25}
             onPress={() =>
               navigation.navigate('EditEmployee', {
                 title: `Edit ${navigation.state.params.title}`
@@ -108,7 +108,7 @@ const AppStack = createStackNavigator(
             name="save"
             type="entypo"
             color="#0082C0"
-            size={35}
+            size={25}
             onPress={() => navigation.goBack()}
           />
         ),
@@ -130,7 +130,7 @@ const AppStack = createStackNavigator(
             name="edit"
             type="feather"
             color="#0082C0"
-            size={35}
+            size={25}
             onPress={() =>
               navigation.navigate('EditMemo', {
                 title: `Edit ${navigation.state.params.title}`
@@ -150,7 +150,7 @@ const AppStack = createStackNavigator(
             name="save"
             type="entypo"
             color="#0082C0"
-            size={35}
+            size={25}
             onPress={() => navigation.goBack()}
           />
         ),

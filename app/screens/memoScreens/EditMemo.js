@@ -20,7 +20,7 @@ class AddMemo extends Component {
   render() {
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
-        <ScrollView style={{ width: '100%' }}>
+        <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={{ title: '', note: '', reminder: '' }}
             onSubmit={this.onSave}
