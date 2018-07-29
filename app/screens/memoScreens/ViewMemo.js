@@ -62,8 +62,11 @@ class ViewMemo extends Component {
           </CustomCard>
 
           <CustomCard label="Reminders">
-            <Text>1. {company[0].memos[0].reminder[0].remind}</Text>
-            <Text>2. {company[0].memos[0].reminder[1].remind}</Text>
+            {company[0].memos[0].reminders.map((val, key) => (
+              <Text key={key}>
+                {key + 1}. {val}
+              </Text>
+            ))}
           </CustomCard>
           <CustomCard label="Created">
             <Text>{company[0].memos[0].createdAt}</Text>
