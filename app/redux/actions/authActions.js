@@ -1,16 +1,24 @@
 import firebase from 'firebase';
 import { Alert } from 'react-native';
+import { db } from '../../App';
 
 import { LOGIN, LOGOUT, SIGNUP } from './types';
 
 export const signUpAction = (values, bag) => async dispatch => {
+  const { email, password } = values;
   try {
-    await firebase.auth().createUserWithEmailAndPassword(values.email, values.password);
+    await firebase.auth().createUserWithEmailAndPassword(email, password);
 
-    dispatch({
-      type: SIGNUP,
-      loggedIn: true
-    });
+    const uid = firebase.auth().currentUser.uid;
+    db.collection('users')
+      .doc(uid)
+      .set({ email, uid, companies: {} })
+      .then(() => {
+        dispatch({ type: SIGNUP, loggedIn: true, uid });
+      })
+      .catch(error => {
+        console.error('Error adding document: ', error);
+      });
   } catch (error) {
     dispatch(() => {
       bag.setSubmitting(false);
@@ -22,10 +30,18 @@ export const signUpAction = (values, bag) => async dispatch => {
 };
 
 export const loginAction = (values, bag) => async dispatch => {
+  const { email, password } = values;
   try {
-    await firebase.auth().signInWithEmailAndPassword(values.email, values.password);
+    await firebase.auth().signInWithEmailAndPassword(email, password);
 
-    dispatch({ type: LOGIN, loggedIn: true });
+    db.collection('users')
+      .where('email', '==', email)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          dispatch({ type: LOGIN, loggedIn: true, user: doc.data() });
+        });
+      });
   } catch (error) {
     dispatch(() => {
       bag.setSubmitting(false);

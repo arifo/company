@@ -90,8 +90,10 @@ const AppStack = createStackNavigator(
             color="#0082C0"
             size={25}
             onPress={() =>
-              navigation.navigate('EditEmployee', {
-                title: `Edit ${navigation.state.params.title}`
+              navigation.navigate('AddEmployee', {
+                title: `Edit ${navigation.state.params.title}`,
+                type: 'edit',
+                company: navigation.state.params.company
               })
             }
           />

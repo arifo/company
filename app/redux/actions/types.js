@@ -2,6 +2,10 @@ export const LOGIN = 'LOGIN';
 export const LOGOUT = 'LOGOUT';
 export const SIGNUP = 'SIGNUP';
 
-export const ADD_COMPANY = 'ADD_COMPANY';
-export const EDIT_COMPANY = 'EDIT_COMPANY';
-export const DELETE_COMPANY = 'DELETE_COMPANY';
+export const GET_COMPANIES = 'GET_COMPANIES';
+
+export const GET_EMPLOYEES = 'GET_EMPLOYEES';
+
+export const ADD_MEMO = 'ADD_MEMO';
+export const DELETE_MEMO = 'DELETE_MEMO';
+export const EDIT_MEMO = 'EDIT_MEMO';

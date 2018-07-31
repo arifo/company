@@ -6,8 +6,11 @@ import * as Yup from 'yup';
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
 import { NavigationActions, StackActions } from 'react-navigation';
+import firebase from 'firebase';
 
-import { addCompany, editCompany } from '../../redux/actions';
+import _ from 'lodash';
+
+import { addCompany, editCompany, deleteCompany } from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
 
@@ -17,6 +20,16 @@ class AddCompany extends Component {
   constructor(props) {
     super(props);
     this.passTextInput = null;
+  }
+
+  componentDidUpdate() {
+    const { id } = this.props.navigation.state.params.company;
+    this.props.companies.forEach((val, key) => {
+      const item = val;
+      if (val.id === id) {
+        this.resetStack(item);
+      }
+    });
   }
 
   onSubmit = values => {
@@ -30,19 +43,11 @@ class AddCompany extends Component {
       '',
       [
         {
-          text: 'Ok',
+          text: 'Yes',
           onPress: () => {
             const { company } = this.props.navigation.state.params;
-
-            const newArray = JSON.parse(JSON.stringify(this.props.companies));
-
-            newArray.forEach((val, key) => {
-              if (val.id === company.id) {
-                newArray.splice(key, 1);
-                this.props.addCompany(newArray);
-                this.props.navigation.replace('Companies');
-              }
-            });
+            this.props.deleteCompany(company);
+            this.props.navigation.replace('Companies');
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
@@ -52,17 +57,16 @@ class AddCompany extends Component {
   };
 
   saveNewCompany = value => {
-    const newArray = JSON.parse(JSON.stringify(this.props.companies));
     UUIDGenerator.getRandomUUID().then(uuid => {
       const companyInfo = {
         id: uuid,
         name: value.name,
         description: value.description,
-        employees: [],
-        memos: []
+        employees: {},
+        memos: {},
+        user: firebase.auth().currentUser.uid
       };
-      newArray.push(companyInfo);
-      this.props.addCompany(newArray);
+      this.props.addCompany(companyInfo, uuid);
       this.props.navigation.replace('ViewCompany', {
         title: `${companyInfo.name}`,
         company: companyInfo
@@ -70,7 +74,7 @@ class AddCompany extends Component {
     });
   };
 
-  resetStack = val => {
+  resetStack = item => {
     this.props.navigation.dispatch(
       StackActions.reset({
         index: 1,
@@ -81,8 +85,8 @@ class AddCompany extends Component {
           NavigationActions.navigate({
             routeName: 'ViewCompany',
             params: {
-              title: `${val.name}`,
-              company: val
+              title: `${item.name}`,
+              company: item
             }
           })
         ]
@@ -91,19 +95,8 @@ class AddCompany extends Component {
   };
 
   saveEditCompany = value => {
-    const { company } = this.props.navigation.state.params;
-
-    const newArray = JSON.parse(JSON.stringify(this.props.companies));
-
-    newArray.forEach((val, key) => {
-      const item = val;
-      if (val.id === company.id) {
-        item.name = value.name;
-        item.description = value.description;
-        this.props.editCompany(newArray);
-        this.resetStack(item);
-      }
-    });
+    const { id } = this.props.navigation.state.params.company;
+    this.props.editCompany(value, id);
   };
 
   render() {
@@ -173,10 +166,10 @@ class AddCompany extends Component {
 }
 
 const mapStateToProps = state => ({
-  companies: state.app.companies
+  companies: state.company.companies
 });
 
 export default connect(
   mapStateToProps,
-  { addCompany, editCompany }
+  { addCompany, editCompany, deleteCompany }
 )(AddCompany);

@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
 import { ScrollView, View, Text } from 'react-native';
 import moment from 'moment';
-import { connect } from 'react-redux';
+
 import ViewMoreText from 'react-native-view-more-text';
 
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
 class ViewMemo extends Component {
-  onSave = values => {};
   renderViewMore(onPress) {
     return (
       <View
@@ -44,12 +43,12 @@ class ViewMemo extends Component {
     );
   }
   render() {
-    const { company } = this.props;
-    console.log('company props @ view memo Scrn', company);
+    const { memo } = this.props.navigation.state.params;
+
     return (
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
         <ScrollView style={{ width: '100%' }}>
-          <CustomCard label="Title" text={company[0].memos[0].title} />
+          <CustomCard label="Title" text={memo.title} />
           <CustomCard label="Note">
             <ViewMoreText
               numberOfLines={5}
@@ -57,23 +56,23 @@ class ViewMemo extends Component {
               renderViewLess={this.renderViewLess}
               textStyle={{ textAlign: 'justify' }}
             >
-              <Text>{company[0].memos[0].note}</Text>
+              <Text>{memo.note}</Text>
             </ViewMoreText>
           </CustomCard>
 
           <CustomCard label="Reminders">
-            {company[0].memos[0].reminders.map((val, key) => (
+            {memo.reminders.map((val, key) => (
               <Text key={key}>
                 {key + 1}. {val}
               </Text>
             ))}
           </CustomCard>
           <CustomCard label="Created">
-            <Text>{company[0].memos[0].createdAt}</Text>
+            <Text>{memo.createdAt}</Text>
           </CustomCard>
-          {company[0].memos[0].lastModified ? (
+          {memo.lastModified ? (
             <CustomCard label="Last modified">
-              <Text>{company[0].memos[0].lastModified}</Text>
+              <Text>{memo.lastModified}</Text>
             </CustomCard>
           ) : null}
         </ScrollView>
@@ -82,8 +81,4 @@ class ViewMemo extends Component {
   }
 }
 
-const mapStateToProps = state => ({
-  company: state.app.companies
-});
-
-export default connect(mapStateToProps)(ViewMemo);
+export default ViewMemo;

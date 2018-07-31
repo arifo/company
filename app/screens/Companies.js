@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { PlatformIOS, ScrollView, TouchableOpacity, View, FlatList } from 'react-native';
-import { Header, Icon, List, ListItem, SearchBar } from 'react-native-elements';
+import { PlatformIOS, TouchableOpacity, View, FlatList } from 'react-native';
+import { Header, Icon, ListItem, SearchBar } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import { logoutAction, sortList } from '../redux/actions';
+import { logoutAction, getCompanies } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
@@ -14,6 +14,11 @@ class Companies extends Component {
     sortKey: 'asc',
     value: ''
   };
+
+  componentDidMount() {
+    this.props.getCompanies();
+  }
+
   componentDidUpdate() {
     const { loggedIn, navigation } = this.props;
     if (!loggedIn) {
@@ -25,10 +30,10 @@ class Companies extends Component {
     this.setState({ value });
   };
 
-  onListItemPress = l => {
+  onListItemPress = item => {
     this.props.navigation.navigate('ViewCompany', {
-      title: l.name,
-      company: l
+      title: item.name,
+      company: item
     });
   };
 
@@ -45,6 +50,8 @@ class Companies extends Component {
       .orderBy(['name'], [this.state.sortKey])
       .filter(item => item.name.includes(this.state.value))
       .value();
+    console.log('auth state', this.props.auth);
+    console.log('data', data);
 
     return (
       <Container>
@@ -107,7 +114,7 @@ class Companies extends Component {
           />
         </View>
 
-        {this.props.companies.length > 0 ? (
+        {data.length > 0 ? (
           <FlatList
             data={data}
             contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff', marginHorizontal: 10 }}
@@ -134,10 +141,11 @@ class Companies extends Component {
 
 const mapStateToProps = state => ({
   loggedIn: state.auth.loggedIn,
-  companies: state.app.companies
+  companies: state.company.companies,
+  auth: state.auth
 });
 
 export default connect(
   mapStateToProps,
-  { logoutAction, sortList }
+  { logoutAction, getCompanies }
 )(Companies);

@@ -6,7 +6,8 @@ import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
 import _ from 'lodash';
 
-import { sortMemoList } from '../../redux/actions';
+import { getEmployees } from '../../redux/actions';
+
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 import AddImageBox from '../../components/AddImageBox';
@@ -23,24 +24,31 @@ class ViewCompany extends Component {
     sortKey: 'asc'
   };
 
+  componentDidMount() {
+    const { id } = this.props.navigation.state.params.company;
+    this.props.getEmployees(id);
+  }
+
   handleTabSwitch(index) {
     this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
   }
 
   onEmployeeSelect = item =>
     this.props.navigation.navigate('ViewEmployee', {
-      title: `${item.name}`
+      title: `${item.name}`,
+      employee: item
     });
 
   onAddEmployee = () =>
     this.props.navigation.navigate('AddEmployee', {
-      title: 'New employee'
+      title: 'New employee',
+      company: this.props.navigation.state.params.company
     });
 
   onMemoSelect = item =>
     this.props.navigation.navigate('ViewMemo', {
       title: `${item.title}`,
-      company: item
+      memo: item
     });
 
   onAddMemo = () =>
@@ -50,17 +58,21 @@ class ViewCompany extends Component {
     });
 
   renderEmployeeTab() {
-    const { employees } = this.props.navigation.state.params.company;
+    // const { employees } = this.props.navigation.state.params.company;
+    // console.log('nav employees in render employee', employees);
+    // const data = _.filter(this.props.employees, employee => _.includes(employees, employee.id));
+    // console.log('data employee', data);
+    const data = this.props.employees;
     return (
-      <View style={{ marginTop: 20, height: deviceHeight * 0.5 }}>
+      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.5, flexGrow: 1 }}>
         <View
-          style={{ height: deviceHeight * 0.4, justifyContent: 'center' }}
+          style={{ maxHeight: deviceHeight * 0.4, justifyContent: 'center', flexGrow: 1 }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
         >
-          {employees.length > 0 ? (
-            <CustomFlatList data={employees} onPress={this.onEmployeeSelect} />
+          {data.length > 0 ? (
+            <CustomFlatList data={data} onPress={this.onEmployeeSelect} />
           ) : (
             <AddImageBox
               size={0.45}
@@ -83,11 +95,15 @@ class ViewCompany extends Component {
 
   renderMemoTab() {
     const { memos } = this.props.navigation.state.params.company;
-    const data = _.orderBy(memos, ['createdAt'], [this.state.sortKey]);
+    const data = _
+      .chain(this.props.memos)
+      .filter(memo => _.includes(memos, memo.id))
+      .orderBy(['createdAt'], [this.state.sortKey])
+      .value();
     return (
-      <View style={{ marginTop: 20, height: deviceHeight * 0.5 }}>
+      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.5, flexGrow: 1 }}>
         <View
-          style={{ height: deviceHeight * 0.4, justifyContent: 'center' }}
+          style={{ maxHeight: deviceHeight * 0.4, justifyContent: 'center', flexGrow: 1 }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
@@ -149,6 +165,8 @@ class ViewCompany extends Component {
 
   render() {
     const { name, description, employees, memos } = this.props.navigation.state.params.company;
+    console.log('nav props in view company', this.props.navigation.state.params.company);
+    console.log('this.props.employees', this.props.employees);
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -192,12 +210,14 @@ class ViewCompany extends Component {
 }
 
 const mapStateToProps = state => ({
-  companies: state.app.companies
+  companies: state.company.companies,
+  employees: state.employee.employees,
+  memos: state.memo.memos
 });
 
 export default connect(
   mapStateToProps,
-  { sortMemoList }
+  { getEmployees }
 )(ViewCompany);
 
 const styles = {

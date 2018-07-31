@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Slider, Text } from 'react-native-elements';
-import { ScrollView, View } from 'react-native';
+import { Button, Card, FormLabel, Slider, Text, Avatar } from 'react-native-elements';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
 import { connect } from 'react-redux';
+import UUIDGenerator from 'react-native-uuid-generator';
+
+import { addEmployee } from '../../redux/actions';
 
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
@@ -19,12 +22,44 @@ class AddEmployee extends Component {
     this.depTextInput = null;
   }
   onSave = values => {
-    this.props.navigation.replace('ViewEmployee', {
-      title: `${values.name}`
+    this.saveNewEmployee(values);
+    // this.props.navigation.replace('ViewEmployee', {
+    //   title: `${values.name}`
+    // });
+  };
+
+  saveNewEmployee = value => {
+    const { company } = this.props.navigation.state.params;
+    UUIDGenerator.getRandomUUID().then(uuid => {
+      const employeeInfo = {
+        id: uuid,
+        companyID: company.id,
+        name: value.name,
+        phone: value.phone,
+        email: value.email,
+        department: value.department,
+        joinDate: value.joinDate,
+        rating: value.rating,
+        createdAt: moment().valueOf(),
+        lastModified: ''
+      };
+      this.props.addEmployee(employeeInfo, uuid);
+      this.props.navigation.replace('ViewEmployee', {
+        title: `${employeeInfo.name}`,
+        employee: employeeInfo
+      });
     });
   };
 
   render() {
+    const { type, company } = this.props.navigation.state.params;
+    console.log('nav type', type, 'nav company', company);
+    console.log(
+      'this.props.employes',
+      this.props.employees,
+      'this.props.companise',
+      this.props.companies
+    );
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
@@ -117,15 +152,7 @@ class AddEmployee extends Component {
                   name="department"
                   error={touched.department && errors.department}
                 />
-                <View
-                  style={{
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginVertical: 8,
-                    paddingRight: 10
-                  }}
-                >
+                <View style={styles.joinDateContainer}>
                   <FormLabel>Join date</FormLabel>
                   <DatePicker
                     style={{ width: 150 }}
@@ -138,56 +165,27 @@ class AddEmployee extends Component {
                     maxDate={moment(new Date()).format('MM/DD/YYYY')}
                     confirmBtnText="Confirm"
                     cancelBtnText="Cancel"
-                    customStyles={{
-                      dateIcon: {
-                        alignSelf: 'flex-end'
-                      },
-                      dateInput: {
-                        marginLeft: 0
-                      }
-                    }}
                     onDateChange={date => setFieldValue('joinDate', date)}
                   />
                 </View>
-                <View
-                  style={{
-                    alignItems: 'flex-end',
-                    flexDirection: 'row',
-                    marginVertical: 8,
-                    paddingRight: 13
-                  }}
-                >
+                <View style={styles.ratingContainer}>
                   <FormLabel>Rating</FormLabel>
-
                   <Text style={{ fontSize: 18, fontWeight: '500' }}>{values.rating}</Text>
                 </View>
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: 'stretch',
-                    justifyContent: 'center',
-                    marginBottom: 30
-                  }}
-                >
+                <View style={styles.ratingSliderContainer}>
                   <Slider
                     value={values.rating}
                     onValueChange={rate => setFieldValue('rating', rate)}
                     minimumValue={0}
                     maximumValue={100}
                     step={5}
-                    thumbStyle={{
-                      width: 20,
-                      height: 30,
-                      borderRadius: 1,
-                      backgroundColor: '#838486'
-                    }}
+                    thumbStyle={styles.sliderThumbStyle}
                     minimumTrackTintColor="#ec4c46"
                   />
                 </View>
                 <Button
                   title="Save Employee"
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
-                  // disabled={!isValid}
                   onPress={handleSubmit}
                 />
               </Card>
@@ -200,7 +198,39 @@ class AddEmployee extends Component {
 }
 
 const mapStateToProps = state => ({
-  company: state.app.companies
+  companies: state.company.companies,
+  employees: state.employee.employees
 });
 
-export default connect(mapStateToProps)(AddEmployee);
+export default connect(
+  mapStateToProps,
+  { addEmployee }
+)(AddEmployee);
+
+export const styles = StyleSheet.create({
+  joinDateContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+    paddingRight: 10
+  },
+  ratingContainer: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    marginVertical: 8,
+    paddingRight: 13
+  },
+  ratingSliderContainer: {
+    flex: 1,
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    marginBottom: 30
+  },
+  sliderThumbStyle: {
+    width: 20,
+    height: 30,
+    borderRadius: 1,
+    backgroundColor: '#838486'
+  }
+});

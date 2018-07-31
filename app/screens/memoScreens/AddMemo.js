@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
-import { ScrollView, View, LayoutAnimation, UIManager } from 'react-native';
+import { ScrollView, View, LayoutAnimation, UIManager, StyleSheet } from 'react-native';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { connect } from 'react-redux';
 import DatePicker from 'react-native-datepicker';
 import ModalSelector from 'react-native-modal-selector';
+import UUIDGenerator from 'react-native-uuid-generator';
 import moment from 'moment';
+
+import { addMemo } from '../../redux/actions';
 
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
@@ -25,15 +28,34 @@ class AddMemo extends Component {
   componentWillUpdate() {
     LayoutAnimation.spring();
   }
-  onSave = async values => {
+  onSave = values => {
     console.log(JSON.stringify(values));
-    this.props.navigation.navigate('ViewMemo', {
-      title: `${values.title}`
+    this.saveNewMemo(values);
+    // this.props.navigation.navigate('ViewMemo', {
+    //   title: `${values.title}`
+    // });
+  };
+
+  saveNewMemo = value => {
+    const currentCompanyId = this.props.navigation.state.params.company.id;
+    UUIDGenerator.getRandomUUID().then(uuid => {
+      const newMemo = {
+        id: uuid,
+        title: value.title,
+        note: value.note,
+        reminders: value.reminders
+      };
+      // newArray.push(companyInfo);
+      this.props.addMemo(newMemo, currentCompanyId);
+      this.props.navigation.replace('ViewMemo', {
+        title: `${newMemo.name}`,
+        memo: newMemo
+      });
     });
   };
 
   addReminder() {
-    const reminder = {};
+    const reminder = '';
     const reminders = this.state.reminders;
     reminders.push(reminder);
     this.setState({ reminders });
@@ -45,17 +67,17 @@ class AddMemo extends Component {
   }
 
   render() {
-    const { employees } = this.props.navigation.state.params.company;
+    const { employees, memos } = this.props.navigation.state.params.company;
+    console.log('memos', memos, 'company', this.props.navigation.state.params.company);
     return (
-      <Container style={{ flex: 1, alignItems: 'center' }}>
+      <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
-            initialValues={{ title: '', note: '', reminder: '', reminders: [] }}
+            initialValues={{ title: '', note: '', reminders: [] }}
             onSubmit={this.onSave}
             validationSchema={Yup.object().shape({
               title: Yup.string().required(),
-              note: Yup.string().required(),
-              reminder: Yup.string().notRequired()
+              note: Yup.string().required()
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%' }}>
@@ -63,7 +85,6 @@ class AddMemo extends Component {
                   keyExtractor={employee => `${employee.id}`}
                   labelExtractor={employee => `${employee.name}`}
                   data={employees}
-                  touchableStyle={{}}
                   initValue="Select contact"
                   onChange={option => {
                     console.log(JSON.stringify(option));
@@ -74,9 +95,7 @@ class AddMemo extends Component {
                   label="Memo"
                   placeholder="memo title..."
                   returnKeyType={'next'}
-                  onSubmitEditing={() => {
-                    this.noteTextInput.focus();
-                  }}
+                  onSubmitEditing={() => this.noteTextInput.focus()}
                   value={values.title}
                   onChange={setFieldValue}
                   onTouch={setFieldTouched}
@@ -87,25 +106,17 @@ class AddMemo extends Component {
                   label="Note"
                   placeholder="note ..."
                   multiline
-                  returnKeyType={'done'}
                   inputRef={input => {
                     this.noteTextInput = input;
                   }}
+                  returnKeyType={'done'}
                   value={values.note}
                   onChange={setFieldValue}
                   onTouch={setFieldTouched}
                   name="note"
                   error={touched.note && errors.note}
                 />
-                <View
-                  style={{
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginVertical: 8,
-                    paddingRight: 10
-                  }}
-                >
+                <View style={styles.reminderContainerStyle}>
                   <FormLabel>Remider</FormLabel>
                   <DatePicker
                     style={{ width: 200 }}
@@ -117,14 +128,6 @@ class AddMemo extends Component {
                     minDate="01-01-1920"
                     confirmBtnText="Confirm"
                     cancelBtnText="Cancel"
-                    customStyles={{
-                      dateIcon: {
-                        alignSelf: 'flex-end'
-                      },
-                      dateInput: {
-                        marginLeft: 0
-                      }
-                    }}
                     onDateChange={date => {
                       const newArray = [...values.reminders];
                       newArray[0] = date;
@@ -133,15 +136,7 @@ class AddMemo extends Component {
                   />
                 </View>
                 {this.state.reminders.map((v, key) => (
-                  <View
-                    key={key}
-                    style={{
-                      justifyContent: 'flex-end',
-                      flexDirection: 'row',
-                      marginTop: 10,
-                      paddingHorizontal: 15
-                    }}
-                  >
+                  <View key={key} style={styles.newReminderContainer}>
                     <DatePicker
                       style={{ width: 200 }}
                       date={values.reminders[key + 1]}
@@ -152,17 +147,9 @@ class AddMemo extends Component {
                       minDate="01-01-1920"
                       confirmBtnText="Confirm"
                       cancelBtnText="Cancel"
-                      customStyles={{
-                        dateIcon: {
-                          alignSelf: 'flex-end'
-                        },
-                        dateInput: {
-                          marginLeft: 0
-                        }
-                      }}
                       onDateChange={date => {
                         const newArray = [...values.reminders];
-                        newArray[key + 1] = date;
+                        newArray.push(date);
                         setFieldValue('reminders', newArray);
                       }}
                     />
@@ -172,42 +159,30 @@ class AddMemo extends Component {
                       size={30}
                       color={'#b7bbbf'}
                       onPress={() => {
+                        const newArray = [...values.reminders];
+                        newArray.splice(key + 1, 1);
                         this.deleteReminder(key);
+                        setFieldValue('reminders', newArray);
                       }}
                     />
                   </View>
                 ))}
                 {this.state.reminders.length <= 4 ? (
-                  <View
-                    style={{
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      flexDirection: 'row',
-                      marginTop: 10,
-                      paddingHorizontal: 15
-                    }}
-                  >
-                    <Text style={{ fontSize: 16, paddingHorizontal: 10, color: '#b7bbbf' }}>
-                      add reminder
-                    </Text>
+                  <View style={styles.addReminderContainer}>
+                    <Text style={styles.addTextStyle}>add reminder</Text>
                     <Icon
                       name="plus-circle"
                       type="feather"
                       size={30}
                       color={'#b7bbbf'}
                       onPress={() => {
-                        const remindersArray = values.reminders.push(values.reminder);
                         this.addReminder();
                       }}
                     />
                   </View>
                 ) : null}
 
-                <Button
-                  title="Save Memo"
-                  buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0', marginTop: 40 }}
-                  onPress={handleSubmit}
-                />
+                <Button title="Save Memo" buttonStyle={styles.button} onPress={handleSubmit} />
               </Card>
             )}
           />
@@ -221,4 +196,40 @@ const mapStateToProps = state => ({
   companie: state.app.companies
 });
 
-export default connect(mapStateToProps)(AddMemo);
+export default connect(
+  mapStateToProps,
+  { addMemo }
+)(AddMemo);
+
+const styles = StyleSheet.create({
+  reminderContainerStyle: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+    paddingRight: 10
+  },
+  newReminderContainer: {
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    marginTop: 10,
+    paddingHorizontal: 15
+  },
+  addReminderContainer: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    marginTop: 10,
+    paddingHorizontal: 15
+  },
+  addTextStyle: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    color: '#b7bbbf'
+  },
+  button: {
+    marginVertical: 20,
+    backgroundColor: '#0082C0',
+    marginTop: 40
+  }
+});
