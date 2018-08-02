@@ -7,10 +7,15 @@ import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
 import { NavigationActions, StackActions } from 'react-navigation';
 import firebase from 'firebase';
+import moment from 'moment';
 
-import _ from 'lodash';
-
-import { addCompany, editCompany, deleteCompany } from '../../redux/actions';
+import {
+  addCompany,
+  editCompany,
+  deleteCompany,
+  toggleCompanyFetching,
+  getCurrentCompany
+} from '../../redux/actions';
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
 
@@ -23,13 +28,11 @@ class AddCompany extends Component {
   }
 
   componentDidUpdate() {
-    const { id } = this.props.navigation.state.params.company;
-    this.props.companies.forEach((val, key) => {
-      const item = val;
-      if (val.id === id) {
-        this.resetStack(item);
-      }
-    });
+    const { id, name } = this.props.currentCompany;
+    const { type } = this.props.navigation.state.params;
+    if (type === 'edit' && !this.props.isFetching) {
+      this.resetStack(name, id);
+    }
   }
 
   onSubmit = values => {
@@ -45,9 +48,9 @@ class AddCompany extends Component {
         {
           text: 'Yes',
           onPress: () => {
-            const { company } = this.props.navigation.state.params;
-            this.props.deleteCompany(company);
-            this.props.navigation.replace('Companies');
+            const { currentCompany } = this.props;
+            this.props.deleteCompany(currentCompany);
+            this.resetStackAfterDeletion();
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
@@ -64,17 +67,20 @@ class AddCompany extends Component {
         description: value.description,
         employees: {},
         memos: {},
-        user: firebase.auth().currentUser.uid
+        user: firebase.auth().currentUser.uid,
+        createdAt: moment().valueOf(),
+        lastModified: ''
       };
       this.props.addCompany(companyInfo, uuid);
+      this.props.toggleCompanyFetching(true);
       this.props.navigation.replace('ViewCompany', {
         title: `${companyInfo.name}`,
-        company: companyInfo
+        companyID: companyInfo.id
       });
     });
   };
 
-  resetStack = item => {
+  resetStack = (name, companyID) => {
     this.props.navigation.dispatch(
       StackActions.reset({
         index: 1,
@@ -85,9 +91,21 @@ class AddCompany extends Component {
           NavigationActions.navigate({
             routeName: 'ViewCompany',
             params: {
-              title: `${item.name}`,
-              company: item
+              title: name,
+              companyID
             }
+          })
+        ]
+      })
+    );
+  };
+  resetStackAfterDeletion = () => {
+    this.props.navigation.dispatch(
+      StackActions.reset({
+        index: 0,
+        actions: [
+          NavigationActions.navigate({
+            routeName: 'Companies'
           })
         ]
       })
@@ -95,19 +113,23 @@ class AddCompany extends Component {
   };
 
   saveEditCompany = value => {
-    const { id } = this.props.navigation.state.params.company;
-    this.props.editCompany(value, id);
+    this.props.toggleCompanyFetching(true);
+    const { id } = this.props.currentCompany;
+    const lastModified = moment().valueOf();
+    this.props.editCompany(value, id, lastModified);
+    this.props.getCurrentCompany(id);
   };
 
   render() {
-    const { type, company } = this.props.navigation.state.params;
+    const { type } = this.props.navigation.state.params;
+    const { currentCompany } = this.props;
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: deviceWidth }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={
               type === 'edit'
-                ? { name: company.name, description: company.description }
+                ? { name: currentCompany.name, description: currentCompany.description }
                 : { name: '', description: '' }
             }
             onSubmit={this.onSubmit}
@@ -166,10 +188,12 @@ class AddCompany extends Component {
 }
 
 const mapStateToProps = state => ({
-  companies: state.company.companies
+  companies: state.company.companies,
+  currentCompany: state.company.currentCompany,
+  isFetching: state.company.isFetching
 });
 
 export default connect(
   mapStateToProps,
-  { addCompany, editCompany, deleteCompany }
+  { addCompany, editCompany, deleteCompany, toggleCompanyFetching, getCurrentCompany }
 )(AddCompany);

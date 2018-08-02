@@ -1,14 +1,21 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Slider, Text, Avatar } from 'react-native-elements';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { Button, Card, FormLabel, Slider, Text, Avatar, Icon } from 'react-native-elements';
+import { ScrollView, View, StyleSheet, Alert } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
+import { NavigationActions, StackActions } from 'react-navigation';
 
-import { addEmployee } from '../../redux/actions';
+import {
+  addEmployee,
+  editEmployee,
+  deleteEmployee,
+  toggleEmployeeFetching,
+  getCurrentEmployee
+} from '../../redux/actions';
 
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
@@ -21,19 +28,25 @@ class AddEmployee extends Component {
     this.emailTextInput = null;
     this.depTextInput = null;
   }
+
+  componentDidUpdate() {
+    const { type } = this.props.navigation.state.params;
+    if (type === 'edit' && !this.props.isFetching) {
+      this.resetStack(this.props.currentEmployee, this.props.currentCompany);
+    }
+  }
+
   onSave = values => {
-    this.saveNewEmployee(values);
-    // this.props.navigation.replace('ViewEmployee', {
-    //   title: `${values.name}`
-    // });
+    const { type } = this.props.navigation.state.params;
+    return type === 'edit' ? this.saveEditEmployee(values) : this.saveNewEmployee(values);
   };
 
   saveNewEmployee = value => {
-    const { company } = this.props.navigation.state.params;
+    const { id } = this.props.currentCompany;
     UUIDGenerator.getRandomUUID().then(uuid => {
       const employeeInfo = {
         id: uuid,
-        companyID: company.id,
+        companyID: id,
         name: value.name,
         phone: value.phone,
         email: value.email,
@@ -44,34 +57,111 @@ class AddEmployee extends Component {
         lastModified: ''
       };
       this.props.addEmployee(employeeInfo, uuid);
-      this.props.navigation.replace('ViewEmployee', {
-        title: `${employeeInfo.name}`,
-        employee: employeeInfo
-      });
+      this.resetStack(employeeInfo, this.props.currentCompany);
     });
   };
 
-  render() {
-    const { type, company } = this.props.navigation.state.params;
-    console.log('nav type', type, 'nav company', company);
-    console.log(
-      'this.props.employes',
-      this.props.employees,
-      'this.props.companise',
-      this.props.companies
+  saveEditEmployee = value => {
+    this.props.toggleEmployeeFetching(true);
+    const { id } = this.props.currentEmployee;
+    const lastModified = moment().valueOf();
+    this.props.editEmployee(value, id, lastModified);
+    this.props.getCurrentEmployee(id);
+  };
+
+  resetStack = (item, currentCompany) => {
+    this.props.navigation.dispatch(
+      StackActions.reset({
+        index: 2,
+        actions: [
+          NavigationActions.navigate({
+            routeName: 'Companies'
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewCompany',
+            params: {
+              title: currentCompany.name,
+              companyID: currentCompany.id
+            }
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewEmployee',
+            params: {
+              title: `${item.name}`,
+              employeeID: item.id
+            }
+          })
+        ]
+      })
     );
+  };
+  resetStackAfterDeletion = currentCompany => {
+    this.props.navigation.dispatch(
+      StackActions.reset({
+        index: 1,
+        actions: [
+          NavigationActions.navigate({
+            routeName: 'Companies'
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewCompany',
+            params: {
+              title: currentCompany.name,
+              companyID: currentCompany.id
+            }
+          })
+        ]
+      })
+    );
+  };
+
+  deleteCurrentEmployee = () => {
+    Alert.alert(
+      'Are sure you want to Delete?',
+      '',
+      [
+        {
+          text: 'Yes',
+          onPress: () => {
+            const { currentEmployee } = this.props;
+            const { currentCompany } = this.props;
+            this.props.deleteEmployee(currentEmployee);
+            this.resetStackAfterDeletion(currentCompany);
+          }
+        },
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
+      ],
+      { cancelable: true }
+    );
+  };
+
+  render() {
+    const { type } = this.props.navigation.state.params;
+    const { name, phone, email, department, joinDate, rating, avatar } = this.props.currentEmployee;
+
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
-            initialValues={{
-              name: '',
-              phone: '',
-              email: '',
-              department: '',
-              joinDate: '',
-              rating: 10
-            }}
+            initialValues={
+              type === 'edit'
+                ? {
+                    name,
+                    phone,
+                    email,
+                    department,
+                    joinDate,
+                    rating
+                  }
+                : {
+                    name: '',
+                    phone: '',
+                    email: '',
+                    department: '',
+                    joinDate: '',
+                    rating: 10
+                  }
+            }
             onSubmit={this.onSave}
             validationSchema={Yup.object().shape({
               name: Yup.string().required(),
@@ -167,6 +257,17 @@ class AddEmployee extends Component {
                     cancelBtnText="Cancel"
                     onDateChange={date => setFieldValue('joinDate', date)}
                   />
+                  {type === 'edit' && values.joinDate ? (
+                    <Icon
+                      name="minus-circle"
+                      type="feather"
+                      size={30}
+                      color={'#b7bbbf'}
+                      onPress={() => {
+                        setFieldValue('joinDate', '');
+                      }}
+                    />
+                  ) : null}
                 </View>
                 <View style={styles.ratingContainer}>
                   <FormLabel>Rating</FormLabel>
@@ -184,10 +285,17 @@ class AddEmployee extends Component {
                   />
                 </View>
                 <Button
-                  title="Save Employee"
+                  title="Save"
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
                   onPress={handleSubmit}
                 />
+                {type === 'edit' ? (
+                  <Button
+                    title="Delete"
+                    buttonStyle={{ backgroundColor: 'red' }}
+                    onPress={this.deleteCurrentEmployee}
+                  />
+                ) : null}
               </Card>
             )}
           />
@@ -198,13 +306,14 @@ class AddEmployee extends Component {
 }
 
 const mapStateToProps = state => ({
-  companies: state.company.companies,
-  employees: state.employee.employees
+  currentEmployee: state.employee.currentEmployee,
+  isFetching: state.employee.isFetching,
+  currentCompany: state.company.currentCompany
 });
 
 export default connect(
   mapStateToProps,
-  { addEmployee }
+  { addEmployee, editEmployee, deleteEmployee, toggleEmployeeFetching, getCurrentEmployee }
 )(AddEmployee);
 
 export const styles = StyleSheet.create({

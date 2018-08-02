@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, FlatList, StyleSheet, Image } from 'react-native';
 import { Avatar, Text } from 'react-native-elements';
+import moment from 'moment';
 
 const Item = props => {
   const { onPress, isMemoTab, item } = props;
@@ -11,7 +12,9 @@ const Item = props => {
           <Text numberOfLines={1} style={{ color: '#39393d', fontWeight: '500' }}>
             {item.title}
           </Text>
-          <Text style={{ color: '#39393d' }}>{item.createdAt}</Text>
+          <Text style={{ color: '#39393d' }}>
+            {moment(item.createdAt).format('M/DD/YYYY, HH:mm:ss')}
+          </Text>
         </View>
       ) : (
         <View style={styles.employeRowStyle}>

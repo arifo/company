@@ -1,13 +1,24 @@
 import React, { Component } from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, ActivityIndicator, LayoutAnimation } from 'react-native';
+import { connect } from 'react-redux';
 import moment from 'moment';
-
+import _ from 'lodash';
 import ViewMoreText from 'react-native-view-more-text';
 
+import { getCurrentMemo } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
 class ViewMemo extends Component {
+  componentDidMount() {
+    const { memoID } = this.props.navigation.state.params;
+    this.props.getCurrentMemo(memoID);
+    console.log('update memo');
+  }
+
+  componentDidUpdate() {
+    LayoutAnimation.spring();
+  }
   renderViewMore(onPress) {
     return (
       <View
@@ -31,7 +42,6 @@ class ViewMemo extends Component {
         style={{
           height: 25,
           marginTop: 5,
-          backgroundColor: '#e2e2e2',
           alignItems: 'center',
           justifyContent: 'center'
         }}
@@ -42,37 +52,53 @@ class ViewMemo extends Component {
       </View>
     );
   }
+
   render() {
-    const { memo } = this.props.navigation.state.params;
+    if (this.props.isFetching) {
+      return <ActivityIndicator size="large" />;
+    }
+    const { title, note, contact, reminders, createdAt, lastModified } = this.props.currentMemo;
+
+    const selectedContact = _.filter(this.props.employees, employee => employee.id === contact.id);
 
     return (
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
         <ScrollView style={{ width: '100%' }}>
-          <CustomCard label="Title" text={memo.title} />
+          <CustomCard label="Title" text={title} />
           <CustomCard label="Note">
             <ViewMoreText
               numberOfLines={5}
               renderViewMore={this.renderViewMore}
               renderViewLess={this.renderViewLess}
               textStyle={{ textAlign: 'justify' }}
-            >
-              <Text>{memo.note}</Text>
-            </ViewMoreText>
+            />
+            <Text>{note}</Text>
           </CustomCard>
+          {_.isEmpty(selectedContact) ? null : (
+            <CustomCard label="Contact">
+              <Text>{selectedContact[0].name}</Text>
+              <Text>{selectedContact[0].phone}</Text>
+              <Text>{selectedContact[0].email}</Text>
+            </CustomCard>
+          )}
 
           <CustomCard label="Reminders">
-            {memo.reminders.map((val, key) => (
-              <Text key={key}>
-                {key + 1}. {val}
-              </Text>
-            ))}
+            {reminders.length > 0 ? (
+              reminders.map((val, key) => (
+                <Text key={key}>
+                  {key + 1}. {val}
+                </Text>
+              ))
+            ) : (
+              <Text>reminders are not set...</Text>
+            )}
           </CustomCard>
           <CustomCard label="Created">
-            <Text>{memo.createdAt}</Text>
+            <Text>{moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}</Text>
           </CustomCard>
-          {memo.lastModified ? (
+          {lastModified ? (
             <CustomCard label="Last modified">
-              <Text>{memo.lastModified}</Text>
+              <Text>{moment(lastModified).fromNow()}</Text>
             </CustomCard>
           ) : null}
         </ScrollView>
@@ -81,4 +107,13 @@ class ViewMemo extends Component {
   }
 }
 
-export default ViewMemo;
+const mapStateToProps = state => ({
+  currentMemo: state.memo.currentMemo,
+  isFetching: state.memo.isFetching,
+  employees: state.employee.employees
+});
+
+export default connect(
+  mapStateToProps,
+  { getCurrentMemo }
+)(ViewMemo);

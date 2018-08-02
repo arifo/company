@@ -4,7 +4,7 @@ import { Header, Icon, ListItem, SearchBar } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import { logoutAction, getCompanies } from '../redux/actions';
+import { logoutAction, getCompanies, toggleCompanyFetching } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
@@ -25,19 +25,22 @@ class Companies extends Component {
       navigation.navigate('AuthLoading');
     }
   }
+  componentWillUnmount() {}
 
   onChangeText = value => {
     this.setState({ value });
   };
 
   onListItemPress = item => {
+    this.props.toggleCompanyFetching(true);
     this.props.navigation.navigate('ViewCompany', {
       title: item.name,
-      company: item
+      companyID: item.id
     });
   };
 
   onAddImagePress = () => {
+    this.props.toggleCompanyFetching(true);
     this.props.navigation.navigate('AddCompany', {
       title: 'New Company'
     });
@@ -50,8 +53,8 @@ class Companies extends Component {
       .orderBy(['name'], [this.state.sortKey])
       .filter(item => item.name.includes(this.state.value))
       .value();
-    console.log('auth state', this.props.auth);
-    console.log('data', data);
+
+    // console.log('data', data);
 
     return (
       <Container>
@@ -142,10 +145,11 @@ class Companies extends Component {
 const mapStateToProps = state => ({
   loggedIn: state.auth.loggedIn,
   companies: state.company.companies,
+  isFetching: state.company.isFetching,
   auth: state.auth
 });
 
 export default connect(
   mapStateToProps,
-  { logoutAction, getCompanies }
+  { logoutAction, getCompanies, toggleCompanyFetching }
 )(Companies);

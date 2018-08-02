@@ -11,10 +11,8 @@ import ViewCompany from '../screens/companyScreens/ViewCompany';
 import AddCompany from '../screens/companyScreens/AddCompany';
 import AddEmployee from '../screens/employeeScreens/AddEmployee';
 import ViewEmployee from '../screens/employeeScreens/ViewEmployee';
-import EditEmployee from '../screens/employeeScreens/EditEmployee';
 import AddMemo from '../screens/memoScreens/AddMemo';
 import ViewMemo from '../screens/memoScreens/ViewMemo';
-import EditMemo from '../screens/memoScreens/EditMemo';
 
 const AuthStack = createStackNavigator({
   Login: {
@@ -64,8 +62,7 @@ const AppStack = createStackNavigator(
             onPress={() =>
               navigation.navigate('AddCompany', {
                 title: `Edit ${navigation.state.params.title}`,
-                type: 'edit',
-                company: navigation.state.params.company
+                type: 'edit'
               })
             }
           />
@@ -92,26 +89,9 @@ const AppStack = createStackNavigator(
             onPress={() =>
               navigation.navigate('AddEmployee', {
                 title: `Edit ${navigation.state.params.title}`,
-                type: 'edit',
-                company: navigation.state.params.company
+                type: 'edit'
               })
             }
-          />
-        ),
-        headerRightContainerStyle: { padding: 15 }
-      })
-    },
-    EditEmployee: {
-      screen: EditEmployee,
-      navigationOptions: ({ navigation }) => ({
-        headerTitle: navigation.state.params.title,
-        headerRight: (
-          <Icon
-            name="save"
-            type="entypo"
-            color="#0082C0"
-            size={25}
-            onPress={() => navigation.goBack()}
           />
         ),
         headerRightContainerStyle: { padding: 15 }
@@ -134,26 +114,11 @@ const AppStack = createStackNavigator(
             color="#0082C0"
             size={25}
             onPress={() =>
-              navigation.navigate('EditMemo', {
-                title: `Edit ${navigation.state.params.title}`
+              navigation.navigate('AddMemo', {
+                title: `Edit ${navigation.state.params.title}`,
+                type: 'edit'
               })
             }
-          />
-        ),
-        headerRightContainerStyle: { padding: 15 }
-      })
-    },
-    EditMemo: {
-      screen: EditMemo,
-      navigationOptions: ({ navigation }) => ({
-        headerTitle: navigation.state.params.title,
-        headerRight: (
-          <Icon
-            name="save"
-            type="entypo"
-            color="#0082C0"
-            size={25}
-            onPress={() => navigation.goBack()}
           />
         ),
         headerRightContainerStyle: { padding: 15 }
@@ -164,7 +129,7 @@ const AppStack = createStackNavigator(
     // navigationOptions: {
     //   header: null
     // },
-    // initialRouteName: 'Settings'
+    // initialRouteName: 'AddMemo'
   }
 );
 
@@ -176,5 +141,6 @@ export default createSwitchNavigator(
   },
   {
     initialRouteName: 'AuthLoading'
+    // initialRouteName: 'App'
   }
 );

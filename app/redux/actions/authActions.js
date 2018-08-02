@@ -30,6 +30,7 @@ export const signUpAction = (values, bag) => async dispatch => {
 };
 
 export const loginAction = (values, bag) => async dispatch => {
+  console.log('login');
   const { email, password } = values;
   try {
     await firebase.auth().signInWithEmailAndPassword(email, password);

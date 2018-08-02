@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView, View, LayoutAnimation, UIManager, StyleSheet } from 'react-native';
+import { ScrollView, View, LayoutAnimation, UIManager, StyleSheet, Alert } from 'react-native';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -8,8 +8,15 @@ import DatePicker from 'react-native-datepicker';
 import ModalSelector from 'react-native-modal-selector';
 import UUIDGenerator from 'react-native-uuid-generator';
 import moment from 'moment';
+import { NavigationActions, StackActions } from 'react-navigation';
 
-import { addMemo } from '../../redux/actions';
+import {
+  addMemo,
+  editMemo,
+  deleteMemo,
+  toggleMemoFetching,
+  getCurrentMemo
+} from '../../redux/actions';
 
 import Container from '../../components/Container';
 import InputForm from '../../components/InputForm';
@@ -25,33 +32,112 @@ class AddMemo extends Component {
     UIManager.setLayoutAnimationEnabledExperimental &&
       UIManager.setLayoutAnimationEnabledExperimental(true);
   }
+
   componentWillUpdate() {
     LayoutAnimation.spring();
   }
+
+  componentDidUpdate() {
+    const { type } = this.props.navigation.state.params;
+    if (type === 'edit' && !this.props.isFetching) {
+      this.resetStack(this.props.currentMemo, this.props.currentCompany);
+    }
+  }
+
   onSave = values => {
-    console.log(JSON.stringify(values));
-    this.saveNewMemo(values);
-    // this.props.navigation.navigate('ViewMemo', {
-    //   title: `${values.title}`
-    // });
+    const { type } = this.props.navigation.state.params;
+    return type === 'edit' ? this.saveEditMemo(values) : this.saveNewMemo(values);
+  };
+
+  resetStack = (item, currentCompany) => {
+    this.props.navigation.dispatch(
+      StackActions.reset({
+        index: 2,
+        actions: [
+          NavigationActions.navigate({
+            routeName: 'Companies'
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewCompany',
+            params: {
+              title: currentCompany.name,
+              companyID: currentCompany.id
+            }
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewMemo',
+            params: {
+              title: item.title,
+              memoID: item.id
+            }
+          })
+        ]
+      })
+    );
   };
 
   saveNewMemo = value => {
-    const currentCompanyId = this.props.navigation.state.params.company.id;
+    const { id } = this.props.currentCompany;
     UUIDGenerator.getRandomUUID().then(uuid => {
-      const newMemo = {
+      const memo = {
         id: uuid,
+        companyID: id,
         title: value.title,
         note: value.note,
-        reminders: value.reminders
+        reminders: value.reminders,
+        contact: value.contact,
+        createdAt: moment().valueOf(),
+        lastModified: ''
       };
-      // newArray.push(companyInfo);
-      this.props.addMemo(newMemo, currentCompanyId);
-      this.props.navigation.replace('ViewMemo', {
-        title: `${newMemo.name}`,
-        memo: newMemo
-      });
+      this.props.addMemo(memo, uuid);
+      this.resetStack(memo, this.props.currentCompany);
     });
+  };
+
+  saveEditMemo = value => {
+    this.props.toggleMemoFetching(true);
+    const { id } = this.props.currentMemo;
+    const lastModified = moment().valueOf();
+    this.props.editMemo(value, id, lastModified);
+    this.props.getCurrentMemo(id);
+  };
+
+  deleteCurrentMemo = () => {
+    Alert.alert(
+      'Are sure you want to Delete?',
+      '',
+      [
+        {
+          text: 'Yes',
+          onPress: () => {
+            this.props.deleteMemo(this.props.currentMemo);
+            this.resetStackAfterDeletion(this.props.currentCompany);
+          }
+        },
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
+      ],
+      { cancelable: true }
+    );
+  };
+
+  resetStackAfterDeletion = currentCompany => {
+    this.props.navigation.dispatch(
+      StackActions.reset({
+        index: 1,
+        actions: [
+          NavigationActions.navigate({
+            routeName: 'Companies'
+          }),
+          NavigationActions.navigate({
+            routeName: 'ViewCompany',
+            params: {
+              title: currentCompany.name,
+              companyID: currentCompany.id
+            }
+          })
+        ]
+      })
+    );
   };
 
   addReminder() {
@@ -67,13 +153,28 @@ class AddMemo extends Component {
   }
 
   render() {
-    const { employees, memos } = this.props.navigation.state.params.company;
-    console.log('memos', memos, 'company', this.props.navigation.state.params.company);
+    const { type } = this.props.navigation.state.params;
+    const { title, note, reminders, contact } = this.props.currentMemo;
+    console.log('this.props.is fetching', this.props.isFetching);
     return (
       <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
-            initialValues={{ title: '', note: '', reminders: [] }}
+            initialValues={
+              type === 'edit'
+                ? {
+                    title,
+                    note,
+                    reminders,
+                    contact
+                  }
+                : {
+                    title: '',
+                    note: '',
+                    reminders: [],
+                    contact: {}
+                  }
+            }
             onSubmit={this.onSave}
             validationSchema={Yup.object().shape({
               title: Yup.string().required(),
@@ -84,11 +185,18 @@ class AddMemo extends Component {
                 <ModalSelector
                   keyExtractor={employee => `${employee.id}`}
                   labelExtractor={employee => `${employee.name}`}
-                  data={employees}
-                  initValue="Select contact"
-                  onChange={option => {
-                    console.log(JSON.stringify(option));
-                    alert(`${option.name} (${option})`);
+                  data={this.props.employees}
+                  selectStyle={{ backgroundColor: 'red' }}
+                  selectedItemTextStyle={{ color: 'yellow' }}
+                  initValue={type === 'edit' ? `${contact.name}` : 'Select contact'}
+                  onChange={select => {
+                    const info = {
+                      id: select.id,
+                      name: select.name,
+                      phone: select.phone,
+                      email: select.email
+                    };
+                    setFieldValue('contact', info);
                   }}
                 />
                 <InputForm
@@ -129,9 +237,11 @@ class AddMemo extends Component {
                     confirmBtnText="Confirm"
                     cancelBtnText="Cancel"
                     onDateChange={date => {
-                      const newArray = [...values.reminders];
-                      newArray[0] = date;
-                      setFieldValue('reminders', newArray);
+                      if (date) {
+                        const newArray = [...values.reminders];
+                        newArray[0] = date;
+                        setFieldValue('reminders', newArray);
+                      }
                     }}
                   />
                 </View>
@@ -183,6 +293,13 @@ class AddMemo extends Component {
                 ) : null}
 
                 <Button title="Save Memo" buttonStyle={styles.button} onPress={handleSubmit} />
+                {type === 'edit' ? (
+                  <Button
+                    title="Delete"
+                    buttonStyle={{ backgroundColor: 'red' }}
+                    onPress={this.deleteCurrentMemo}
+                  />
+                ) : null}
               </Card>
             )}
           />
@@ -193,12 +310,15 @@ class AddMemo extends Component {
 }
 
 const mapStateToProps = state => ({
-  companie: state.app.companies
+  currentMemo: state.memo.currentMemo,
+  isFetching: state.memo.isFetching,
+  currentCompany: state.company.currentCompany,
+  employees: state.employee.employees
 });
 
 export default connect(
   mapStateToProps,
-  { addMemo }
+  { addMemo, editMemo, deleteMemo, toggleMemoFetching, getCurrentMemo }
 )(AddMemo);
 
 const styles = StyleSheet.create({

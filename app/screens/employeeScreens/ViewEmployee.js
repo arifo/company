@@ -1,50 +1,68 @@
 import React, { Component } from 'react';
 import { Text, Rating, Avatar } from 'react-native-elements';
-import { ScrollView, View, Image } from 'react-native';
+import { ScrollView, View, Image, ActivityIndicator, LayoutAnimation } from 'react-native';
 import moment from 'moment';
+import { connect } from 'react-redux';
 
+import { getCurrentEmployee } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
 class ViewEmployee extends Component {
+  componentDidMount() {
+    const { employeeID } = this.props.navigation.state.params;
+    this.props.getCurrentEmployee(employeeID);
+  }
+
+  componentDidUpdate() {
+    LayoutAnimation.spring();
+  }
+
   render() {
-    const { employee } = this.props.navigation.state.params;
-    console.log('nav employee', employee);
-    console.log('redux employes', this.props.employee);
+    console.log('this.props.isFetching', this.props.isFetching);
+    if (this.props.isFetching) {
+      return <ActivityIndicator size="large" />;
+    }
+    const {
+      name,
+      phone,
+      email,
+      department,
+      joinDate,
+      rating,
+      createdAt,
+      lastModified,
+      avatar
+    } = this.props.currentEmployee;
 
     return (
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
         <ScrollView style={{ width: '100%' }}>
-          {employee.avatar ? (
-            <Image source={{ uri: employee.avatar }} style={styles.image} resizeMethod="resize" />
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.image} resizeMethod="resize" />
           ) : (
             <Avatar rounded icon={styles.icon} containerStyle={styles.avatar} />
           )}
-          <CustomCard label="Name" text={employee.name} />
-          <CustomCard label="Phone number" text={employee.phone} />
-          <CustomCard label="Email adress" text={employee.email} />
-          <CustomCard label="Department" text={employee.department} />
+          <CustomCard label="Name" text={name} />
+          <CustomCard label="Phone number" text={phone} />
+          <CustomCard label="Email adress" text={email} />
+          <CustomCard label="Department" text={department} />
           <CustomCard
             label="Join date"
-            text={moment(employee.joinDate, 'MM/DD/YYYY').format('MMMM Do YYYY')}
+            text={joinDate ? moment(joinDate, 'MM/DD/YYYY').format('MMMM Do YYYY') : '-'}
           />
           <CustomCard label="Rating">
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text>{employee.rating}</Text>
-              <Rating
-                ratingCount={10}
-                imageSize={20}
-                readonly
-                startingValue={employee.rating / 10}
-              />
+              <Text>{rating}</Text>
+              <Rating ratingCount={10} imageSize={20} readonly startingValue={rating / 10} />
             </View>
           </CustomCard>
           <CustomCard label="Contact created">
-            <Text>{moment(employee.createdAt, 'x').format('MMMM Do YYYY')}</Text>
+            <Text>{moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}</Text>
           </CustomCard>
-          {employee.lastModified ? (
+          {lastModified ? (
             <CustomCard label="Last modified">
-              <Text>{employee.lastModified}</Text>
+              <Text>{moment(lastModified).fromNow()}</Text>
             </CustomCard>
           ) : null}
         </ScrollView>
@@ -53,7 +71,15 @@ class ViewEmployee extends Component {
   }
 }
 
-export default ViewEmployee;
+const mapStateToProps = state => ({
+  currentEmployee: state.employee.currentEmployee,
+  isFetching: state.employee.isFetching
+});
+
+export default connect(
+  mapStateToProps,
+  { getCurrentEmployee }
+)(ViewEmployee);
 
 const styles = {
   image: {

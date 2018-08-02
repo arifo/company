@@ -1,12 +1,19 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Dimensions } from 'react-native';
+import { View, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
+import moment from 'moment';
 import _ from 'lodash';
 
-import { getEmployees } from '../../redux/actions';
+import {
+  getEmployees,
+  getMemos,
+  getCurrentCompany,
+  toggleMemoFetching,
+  toggleEmployeeFetching
+} from '../../redux/actions';
 
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
@@ -21,52 +28,56 @@ class ViewCompany extends Component {
     index: 0,
     isTabOneShowing: true,
     enableScrollViewScroll: true,
-    sortKey: 'asc'
+    sortKey: 'desc'
   };
 
   componentDidMount() {
-    const { id } = this.props.navigation.state.params.company;
-    this.props.getEmployees(id);
+    const { companyID } = this.props.navigation.state.params;
+    this.props.getCurrentCompany(companyID);
+    this.props.getEmployees(companyID);
+    this.props.getMemos(companyID);
   }
 
   handleTabSwitch(index) {
     this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
   }
 
-  onEmployeeSelect = item =>
+  onEmployeeSelect = item => {
+    this.props.toggleEmployeeFetching(true);
     this.props.navigation.navigate('ViewEmployee', {
-      title: `${item.name}`,
-      employee: item
+      title: item.name,
+      employeeID: item.id
     });
+  };
 
-  onAddEmployee = () =>
+  onAddEmployee = () => {
+    this.props.toggleEmployeeFetching(true);
     this.props.navigation.navigate('AddEmployee', {
-      title: 'New employee',
-      company: this.props.navigation.state.params.company
+      title: 'New employee'
     });
+  };
 
-  onMemoSelect = item =>
+  onMemoSelect = item => {
+    this.props.toggleMemoFetching(true);
     this.props.navigation.navigate('ViewMemo', {
       title: `${item.title}`,
-      memo: item
+      memoID: item.id
     });
+  };
 
-  onAddMemo = () =>
+  onAddMemo = () => {
+    this.props.toggleMemoFetching(true);
     this.props.navigation.navigate('AddMemo', {
-      title: 'New memo',
-      company: this.props.navigation.state.params.company
+      title: 'New memo'
     });
+  };
 
   renderEmployeeTab() {
-    // const { employees } = this.props.navigation.state.params.company;
-    // console.log('nav employees in render employee', employees);
-    // const data = _.filter(this.props.employees, employee => _.includes(employees, employee.id));
-    // console.log('data employee', data);
     const data = this.props.employees;
     return (
-      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.5, flexGrow: 1 }}>
+      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
         <View
-          style={{ maxHeight: deviceHeight * 0.4, justifyContent: 'center', flexGrow: 1 }}
+          style={{ maxHeight: deviceHeight * 0.35, justifyContent: 'center', flexGrow: 1 }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
@@ -94,16 +105,14 @@ class ViewCompany extends Component {
   }
 
   renderMemoTab() {
-    const { memos } = this.props.navigation.state.params.company;
     const data = _
       .chain(this.props.memos)
-      .filter(memo => _.includes(memos, memo.id))
       .orderBy(['createdAt'], [this.state.sortKey])
       .value();
     return (
-      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.5, flexGrow: 1 }}>
+      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
         <View
-          style={{ maxHeight: deviceHeight * 0.4, justifyContent: 'center', flexGrow: 1 }}
+          style={{ maxHeight: deviceHeight * 0.35, justifyContent: 'center', flexGrow: 1 }}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
@@ -128,7 +137,7 @@ class ViewCompany extends Component {
             onPress={this.onAddMemo}
           />
           <Icon
-            name={this.state.sortKey === 'asc' ? 'angle-double-up' : 'angle-double-down'}
+            name={this.state.sortKey === 'desc' ? 'angle-double-up' : 'angle-double-down'}
             type="font-awesome"
             color="#6f7172"
             size={35}
@@ -164,9 +173,18 @@ class ViewCompany extends Component {
   }
 
   render() {
-    const { name, description, employees, memos } = this.props.navigation.state.params.company;
-    console.log('nav props in view company', this.props.navigation.state.params.company);
-    console.log('this.props.employees', this.props.employees);
+    console.log('Copany fethcing this.props.isFetching', this.props.isFetching);
+    if (this.props.isFetching) {
+      return <ActivityIndicator size="large" />;
+    }
+    const {
+      name,
+      description,
+      employees,
+      memos,
+      createdAt,
+      lastModified
+    } = this.props.currentCompany;
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -203,6 +221,27 @@ class ViewCompany extends Component {
 
             {this.state.isTabOneShowing ? this.renderEmployeeTab() : this.renderMemoTab()}
           </CustomCard>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingHorizontal: 14,
+              marginTop: 10
+            }}
+          >
+            {createdAt ? (
+              <Text style={{ color: '#bfbfbf', fontSize: 10 }}>
+                created: {moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}
+              </Text>
+            ) : null}
+
+            {lastModified ? (
+              <Text style={{ color: '#bfbfbf', fontSize: 10 }}>
+                last modified: {moment(lastModified).fromNow()}
+              </Text>
+            ) : null}
+          </View>
         </ScrollView>
       </Container>
     );
@@ -211,13 +250,15 @@ class ViewCompany extends Component {
 
 const mapStateToProps = state => ({
   companies: state.company.companies,
+  isFetching: state.company.isFetching,
+  currentCompany: state.company.currentCompany,
   employees: state.employee.employees,
   memos: state.memo.memos
 });
 
 export default connect(
   mapStateToProps,
-  { getEmployees }
+  { getEmployees, getMemos, getCurrentCompany, toggleMemoFetching, toggleEmployeeFetching }
 )(ViewCompany);
 
 const styles = {
