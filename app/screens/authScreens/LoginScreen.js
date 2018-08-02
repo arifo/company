@@ -20,18 +20,14 @@ class LoginScreen extends Component {
       navigation.navigate('App');
     }
   }
+
   onLogin = (values, bag) => {
     this.props.loginAction(values, bag);
   };
 
   render() {
     return (
-      <Container
-        style={{
-          flex: 1,
-          backgroundColor: '#ffffff'
-        }}
-      >
+      <Container style={{ flex: 1, backgroundColor: '#ffffff' }}>
         <ScrollView
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}

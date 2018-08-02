@@ -3,7 +3,10 @@ import { db } from '../../App';
 
 import { GET_EMPLOYEES, GET_CURRENT_EMPLOYEE, TOGGLE_EMPLOYE_FETCHING } from './types';
 
-export const getEmployees = id => dispatch => {
+export const getEmployees = id => (dispatch, getState) => {
+  if (!getState().auth.loggedIn) {
+    unsubscribe();
+  }
   const unsubscribe = db
     .collection('employees')
     .where('companyID', '==', id)
@@ -15,8 +18,6 @@ export const getEmployees = id => dispatch => {
       console.log('listener is fetching Employee document!', arr);
       dispatch({ type: GET_EMPLOYEES, payload: arr });
     });
-
-  // unsubscribe();
 };
 
 export const getCurrentEmployee = employeeID => (dispatch, getState) => {

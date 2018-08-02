@@ -3,7 +3,10 @@ import { db } from '../../App';
 
 import { GET_MEMOS, GET_CURRENT_MEMO, TOGGLE_MEMO_FETCHING } from './types';
 
-export const getMemos = id => dispatch => {
+export const getMemos = id => (dispatch, getState) => {
+  if (!getState().auth.loggedIn) {
+    unsubscribe();
+  }
   const unsubscribe = db
     .collection('memos')
     .where('companyID', '==', id)

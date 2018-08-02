@@ -1,10 +1,15 @@
 import firebase from 'firebase';
 import { db } from '../../App';
 
-import { GET_COMPANIES, GET_CURRENT_COMPANY, TOGGLE_COMPANY_FETCHING } from './types';
+import {
+  GET_COMPANIES,
+  GET_CURRENT_COMPANY,
+  TOGGLE_COMPANY_FETCHING,
+  LISTENERS_UNSUBED
+} from './types';
 
-export const getCompanies = () => dispatch => {
-  const listener = db
+export const getCompanies = () => (dispatch, getState) => {
+  const unsubscribe = db
     .collection('companies')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot(querySnapshot => {
@@ -15,6 +20,12 @@ export const getCompanies = () => dispatch => {
       console.log('listener is fetching Companies documents!', arr);
       dispatch({ type: GET_COMPANIES, payload: arr });
     });
+
+  if (!getState().auth.loggedIn) {
+    console.log('unsubscribe');
+    unsubscribe();
+    dispatch({ type: LISTENERS_UNSUBED, payload: true });
+  }
 };
 
 export const getCurrentCompany = companyID => (dispatch, getState) => {

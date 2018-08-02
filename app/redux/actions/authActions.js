@@ -70,8 +70,10 @@ export const forgotPassAction = (values, bag, navigation) => async dispatch => {
 };
 
 export function logoutAction() {
-  return dispatch => {
-    firebase.auth().signOut();
+  return (dispatch, getState) => {
     dispatch({ type: LOGOUT, loggedIn: false });
+    if (getState().auth.listenersUnsubed) {
+      firebase.auth().signOut();
+    }
   };
 }

@@ -46,6 +46,11 @@ class Companies extends Component {
     });
   };
 
+  onLogoutPress = async () => {
+    await this.props.logoutAction();
+    await this.props.getCompanies();
+  };
+
   render() {
     const { companies } = this.props;
     const data = _
@@ -65,7 +70,7 @@ class Companies extends Component {
               name={PlatformIOS ? 'ios-log-out' : 'md-log-out'}
               color="#fff"
               size={25}
-              onPress={() => this.props.logoutAction()}
+              onPress={this.onLogoutPress}
               underlayColor="transparent"
             />
           }
