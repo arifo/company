@@ -10,7 +10,7 @@ import {
 
 export const getCompanies = unsub => (dispatch, getState) => {
   if (!getState().auth.loggedIn && unsub) {
-    console.log('unsubscribing company listener...');
+    // console.log('unsubscribing company listener...');
     unsubscribe();
     dispatch({ type: LISTENERS_UNSUBED, payload: true });
   }
@@ -22,15 +22,15 @@ export const getCompanies = unsub => (dispatch, getState) => {
       querySnapshot.forEach(doc => {
         arr.push(doc.data());
       });
-      console.log('listener is fetching Companies documents!', arr);
-      dispatch({ type: GET_COMPANIES, payload: arr });
+      // console.log('listener is fetching Companies documents!', arr);
+      dispatch({ type: GET_COMPANIES, payload: arr, isFetching: false });
     });
 };
 
 export const getCurrentCompany = companyID => (dispatch, getState) => {
-  console.log('before if in company action....getstate', getState().company.isFetching);
+  // console.log('before if in company action....getstate', getState().company.isFetching);
   if (getState().company.isFetching) {
-    console.log('if in company action....getstate', getState().company.isFetching);
+    // console.log('if in company action....getstate', getState().company.isFetching);
 
     const docRef = db.collection('companies').doc(companyID);
 
@@ -38,7 +38,7 @@ export const getCurrentCompany = companyID => (dispatch, getState) => {
       .get()
       .then(doc => {
         if (doc.exists) {
-          console.log('Fetched company document!', doc.data());
+          // console.log('Fetched company document!', doc.data());
           dispatch({ type: GET_CURRENT_COMPANY, company: doc.data(), isFetching: false });
         } else {
           console.log('No such document!');
@@ -92,7 +92,7 @@ export const deleteCompany = company => dispatch => {
       return batch.commit();
     })
     .then(() => {
-      console.log('all related employees deletes');
+      console.log('all related memos deletes');
     });
 
   const batch = db.batch();
@@ -123,27 +123,3 @@ export const toggleCompanyFetching = fetching => ({
   type: TOGGLE_COMPANY_FETCHING,
   payload: fetching
 });
-
-// const listen = db
-//   .collection('companies')
-//   .where('user', '==', firebase.auth().currentUser.uid)
-//   .onSnapshot();
-
-// export const startGettingCompanies = () => dispatch => {
-//   listen(querySnapshot => {
-//     const arr = [];
-//     querySnapshot.forEach(doc => {
-//       arr.push(doc.data());
-//     });
-//     dispatch({ type: GET_COMPANIES, payload: arr });
-//   });
-// };
-
-// export const stopGettingCompanies = () => {
-//   listen();
-// };
-
-// docRef.set(
-//   { [`${this.state.shopId}`]: { [`${timestamp}`]: true } },
-//   { merge: true }
-// );

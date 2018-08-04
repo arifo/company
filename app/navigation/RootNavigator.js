@@ -13,7 +13,6 @@ import AddEmployee from '../screens/employeeScreens/AddEmployee';
 import ViewEmployee from '../screens/employeeScreens/ViewEmployee';
 import AddMemo from '../screens/memoScreens/AddMemo';
 import ViewMemo from '../screens/memoScreens/ViewMemo';
-import MyComponent from '../screens/alphabet';
 
 const AuthStack = createStackNavigator({
   Login: {
@@ -124,9 +123,6 @@ const AppStack = createStackNavigator(
         ),
         headerRightContainerStyle: { padding: 15 }
       })
-    },
-    Alphabet: {
-      screen: MyComponent
     }
   },
   {

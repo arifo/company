@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import * as Progress from 'react-native-progress';
+import { ActivityIndicator, PlatformIOS } from 'react-native';
 import firebase from 'firebase';
 
 import { loginAction, alreadyLoggedIn } from '../../redux/actions';
@@ -44,13 +44,7 @@ class LoadingScreen extends Component {
   render() {
     return (
       <Container style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Progress.CircleSnail
-          progress={this.state.progress}
-          indeterminate={this.state.indeterminate}
-          thickness={3}
-          duration={500}
-          size={60}
-        />
+        <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
       </Container>
     );
   }

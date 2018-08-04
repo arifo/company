@@ -9,7 +9,7 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case GET_COMPANIES: {
-      return { ...state, companies: action.payload };
+      return { ...state, companies: action.payload, isFetching: action.isFetching };
     }
     case GET_CURRENT_COMPANY: {
       return { ...state, currentCompany: action.company, isFetching: action.isFetching };

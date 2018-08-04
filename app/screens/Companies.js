@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { PlatformIOS, TouchableOpacity, View, FlatList, ActivityIndicator } from 'react-native';
-import { Header, Icon, ListItem, SearchBar } from 'react-native-elements';
+import { PlatformIOS, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
+import AlphabetListView from 'react-native-alphabetlistview';
 
 import { logoutAction, getCompanies, toggleCompanyFetching } from '../redux/actions';
 
-import MyComponent from './alphabet';
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
 
@@ -17,10 +17,10 @@ class Companies extends Component {
   };
 
   componentDidMount() {
+    this.props.toggleCompanyFetching(true);
     this.props.getCompanies();
   }
 
-  componentDidUpdate() {}
   componentWillUnmount() {
     this.props.getCompanies(true);
   }
@@ -46,25 +46,58 @@ class Companies extends Component {
 
   onLogoutPress = async () => {
     const { navigation } = this.props;
-    // navigation.navigate('Alphabet');
     await this.props.logoutAction(navigation);
     await this.props.getCompanies();
   };
 
+  getFirstLetterFrom(value) {
+    return value.slice(0, 1).toUpperCase();
+  }
+
+  renderCell = item => (
+    <TouchableOpacity
+      style={{
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,.1)',
+        height: 40,
+        justifyContent: 'center',
+        paddingLeft: 15
+      }}
+      onPress={() => this.onListItemPress(item.item)}
+    >
+      <Text style={{ fontSize: 20, color: 'rgba(0,0,0,.5)' }}>{item.item.name}</Text>
+    </TouchableOpacity>
+  );
+
+  renderSectionHeader = headerItem => (
+    <View
+      style={{
+        backgroundColor: '#c0c0c2',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 30
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 20,
+          color: 'rgba(0,0,0,.5)'
+        }}
+      >
+        {headerItem.title}
+      </Text>
+    </View>
+  );
+
   render() {
     console.log('this.props.isFetching companies', this.props.isFetching);
-    if (this.props.isFetching) {
-      return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#0082C0" />
-        </View>
-      );
-    }
+
     const { companies } = this.props;
     const data = _
       .chain(companies)
       .orderBy(['name'], [this.state.sortKey])
       .filter(item => item.name.includes(this.state.value))
+      .groupBy(d => this.getFirstLetterFrom(d.name))
       .value();
 
     return (
@@ -127,18 +160,12 @@ class Companies extends Component {
             underlayColor="transparent"
           />
         </View>
-
-        {data.length > 0 ? (
-          <FlatList
-            data={data}
-            contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff', marginHorizontal: 10 }}
-            component={TouchableOpacity}
-            renderItem={({ item }) => (
-              <ListItem title={item.name} onPress={() => this.onListItemPress(item)} />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-          />
-        ) : (
+        {this.props.isFetching ? (
+          <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
+          </View>
+        ) : null}
+        {_.isEmpty(data) ? (
           <AddImageBox
             size={0.45}
             iconType="entypo"
@@ -146,6 +173,16 @@ class Companies extends Component {
             iconSize={100}
             text="Add Company"
             onPress={this.onAddImagePress}
+          />
+        ) : (
+          <AlphabetListView
+            data={data}
+            style={{ backgroundColor: '#fff' }}
+            sectionHeaderHeight={30}
+            cellHeight={40}
+            sectionHeader={this.renderSectionHeader}
+            cell={this.renderCell}
+            updateScrollState
           />
         )}
       </Container>
