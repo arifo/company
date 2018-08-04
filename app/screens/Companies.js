@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { PlatformIOS, TouchableOpacity, View, FlatList } from 'react-native';
+import { PlatformIOS, TouchableOpacity, View, FlatList, ActivityIndicator } from 'react-native';
 import { Header, Icon, ListItem, SearchBar } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
 import { logoutAction, getCompanies, toggleCompanyFetching } from '../redux/actions';
 
+import MyComponent from './alphabet';
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
 
@@ -19,13 +20,10 @@ class Companies extends Component {
     this.props.getCompanies();
   }
 
-  componentDidUpdate() {
-    const { loggedIn, navigation } = this.props;
-    if (!loggedIn) {
-      navigation.navigate('AuthLoading');
-    }
+  componentDidUpdate() {}
+  componentWillUnmount() {
+    this.props.getCompanies(true);
   }
-  componentWillUnmount() {}
 
   onChangeText = value => {
     this.setState({ value });
@@ -47,19 +45,27 @@ class Companies extends Component {
   };
 
   onLogoutPress = async () => {
-    await this.props.logoutAction();
+    const { navigation } = this.props;
+    // navigation.navigate('Alphabet');
+    await this.props.logoutAction(navigation);
     await this.props.getCompanies();
   };
 
   render() {
+    console.log('this.props.isFetching companies', this.props.isFetching);
+    if (this.props.isFetching) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color="#0082C0" />
+        </View>
+      );
+    }
     const { companies } = this.props;
     const data = _
       .chain(companies)
       .orderBy(['name'], [this.state.sortKey])
       .filter(item => item.name.includes(this.state.value))
       .value();
-
-    // console.log('data', data);
 
     return (
       <Container>

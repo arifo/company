@@ -109,6 +109,7 @@ class SignUpScreen extends Component {
                   inputRef={input => {
                     this.confirmPassTextInput = input;
                   }}
+                  onSubmitEditing={handleSubmit}
                   value={values.confirmPassword}
                   onChange={setFieldValue}
                   onTouch={setFieldTouched}

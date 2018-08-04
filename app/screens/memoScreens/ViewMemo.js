@@ -55,7 +55,11 @@ class ViewMemo extends Component {
 
   render() {
     if (this.props.isFetching) {
-      return <ActivityIndicator size="large" />;
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color="#0082C0" />
+        </View>
+      );
     }
     const { title, note, contact, reminders, createdAt, lastModified } = this.props.currentMemo;
 

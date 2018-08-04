@@ -53,8 +53,9 @@ class ForgotPassword extends React.Component {
                   placeholder="example@example.com"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  returnKeyType={'next'}
+                  returnKeyType={'done'}
                   blurOnSubmit={false}
+                  onSubmitEditing={handleSubmit}
                   value={values.email}
                   onChange={setFieldValue}
                   onTouch={setFieldTouched}
@@ -66,6 +67,7 @@ class ForgotPassword extends React.Component {
                   title="Submit"
                   buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
                   loading={isSubmitting}
+                  disabled={isSubmitting}
                   onPress={handleSubmit}
                 />
               </Card>

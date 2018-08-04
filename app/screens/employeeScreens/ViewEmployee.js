@@ -21,7 +21,11 @@ class ViewEmployee extends Component {
   render() {
     console.log('this.props.isFetching', this.props.isFetching);
     if (this.props.isFetching) {
-      return <ActivityIndicator size="large" />;
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color="#0082C0" />
+        </View>
+      );
     }
     const {
       name,

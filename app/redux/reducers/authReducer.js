@@ -1,4 +1,4 @@
-import { LOGIN, LOGOUT, SIGNUP, LISTENERS_UNSUBED, JUST_LOGGED_OUT } from '../actions/types';
+import { LOGIN, LOGOUT, SIGNUP, LISTENERS_UNSUBED, ALREADY_LOGGED_IN } from '../actions/types';
 
 const initialState = {
   loggedIn: false,
@@ -6,8 +6,7 @@ const initialState = {
     uid: '',
     companies: []
   },
-  listenersUnsubed: false,
-  isRelogging: true
+  listenersUnsubed: false
 };
 
 export default (state = initialState, action) => {
@@ -24,8 +23,8 @@ export default (state = initialState, action) => {
     case LISTENERS_UNSUBED: {
       return { ...state, listenersUnsubed: action.payload };
     }
-    case JUST_LOGGED_OUT: {
-      return { ...state, isRelogging: action.payload };
+    case ALREADY_LOGGED_IN: {
+      return { ...state, loggedIn: action.loggedIn };
     }
     default:
       return state;

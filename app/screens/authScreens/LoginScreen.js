@@ -14,18 +14,15 @@ class LoginScreen extends Component {
     super(props);
     this.passTextInput = null;
   }
-  componentDidUpdate() {
-    const { loggedIn, navigation } = this.props;
-    if (loggedIn) {
-      navigation.navigate('App');
-    }
-  }
+  componentDidUpdate() {}
 
   onLogin = (values, bag) => {
-    this.props.loginAction(values, bag);
+    const { navigation } = this.props;
+    this.props.loginAction(values, bag, navigation);
   };
 
   render() {
+    console.log('LOGIN screen this.props.loggedIn', this.props.loggedIn);
     return (
       <Container style={{ flex: 1, backgroundColor: '#ffffff' }}>
         <ScrollView
@@ -77,10 +74,10 @@ class LoginScreen extends Component {
                   autoCapitalize="none"
                   secureTextEntry
                   returnKeyType={'done'}
-                  returnKeyType={'next'}
                   inputRef={input => {
                     this.passTextInput = input;
                   }}
+                  onSubmitEditing={handleSubmit}
                   value={values.password}
                   onChange={setFieldValue}
                   onTouch={setFieldTouched}
@@ -92,6 +89,7 @@ class LoginScreen extends Component {
                   title="Login"
                   buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
                   loading={isSubmitting}
+                  disabled={isSubmitting}
                   onPress={handleSubmit}
                 />
               </Card>

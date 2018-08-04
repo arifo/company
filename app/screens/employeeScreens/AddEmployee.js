@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Slider, Text, Avatar, Icon } from 'react-native-elements';
-import { ScrollView, View, StyleSheet, Alert } from 'react-native';
+import { Button, Card, FormLabel, Slider, Text, Icon } from 'react-native-elements';
+import { ScrollView, View, StyleSheet, Alert, Image } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
+
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
 import { NavigationActions, StackActions } from 'react-navigation';
@@ -14,7 +15,9 @@ import {
   editEmployee,
   deleteEmployee,
   toggleEmployeeFetching,
-  getCurrentEmployee
+  getCurrentEmployee,
+  uploadImagesToFirebaseStorage,
+  deleteAvatarFromStorage
 } from '../../redux/actions';
 
 import Container from '../../components/Container';
@@ -27,21 +30,39 @@ class AddEmployee extends Component {
     this.phoneTextInput = null;
     this.emailTextInput = null;
     this.depTextInput = null;
+    this.state = {
+      avatar: '',
+      imageSelected: false,
+      imageUploading: false
+    };
   }
 
-  componentDidUpdate() {
+  componentDidMount() {
     const { type } = this.props.navigation.state.params;
-    if (type === 'edit' && !this.props.isFetching) {
-      this.resetStack(this.props.currentEmployee, this.props.currentCompany);
+    if (this.props.currentEmployee.avatar) {
+      this.setState({ avatar: this.props.currentEmployee.avatar, imageSelected: true });
+    }
+    if (type !== 'edit') {
+      this.setState({ avatar: '', imageSelected: false });
     }
   }
 
-  onSave = values => {
+  componentWillUpdate() {
+    // LayoutAnimation.spring();
+  }
+  componentWillUnmount() {
+    console.log('unmount add empol');
+  }
+
+  onSave = async values => {
+    console.log('save 2');
     const { type } = this.props.navigation.state.params;
     return type === 'edit' ? this.saveEditEmployee(values) : this.saveNewEmployee(values);
   };
 
   saveNewEmployee = value => {
+    console.log('save 1');
+
     const { id } = this.props.currentCompany;
     UUIDGenerator.getRandomUUID().then(uuid => {
       const employeeInfo = {
@@ -53,6 +74,7 @@ class AddEmployee extends Component {
         department: value.department,
         joinDate: value.joinDate,
         rating: value.rating,
+        avatar: this.state.avatar,
         createdAt: moment().valueOf(),
         lastModified: ''
       };
@@ -62,11 +84,13 @@ class AddEmployee extends Component {
   };
 
   saveEditEmployee = value => {
+    const { currentEmployee, currentCompany } = this.props;
+    const { id } = currentEmployee;
     this.props.toggleEmployeeFetching(true);
-    const { id } = this.props.currentEmployee;
     const lastModified = moment().valueOf();
-    this.props.editEmployee(value, id, lastModified);
+    this.props.editEmployee(value, id, lastModified, this.state.avatar);
     this.props.getCurrentEmployee(id);
+    this.resetStack(currentEmployee, currentCompany);
   };
 
   resetStack = (item, currentCompany) => {
@@ -126,6 +150,7 @@ class AddEmployee extends Component {
             const { currentEmployee } = this.props;
             const { currentCompany } = this.props;
             this.props.deleteEmployee(currentEmployee);
+            this.props.deleteAvatarFromStorage(this.state.avatar);
             this.resetStackAfterDeletion(currentCompany);
           }
         },
@@ -135,12 +160,50 @@ class AddEmployee extends Component {
     );
   };
 
+  selectAvatarImg = () => {
+    this.setState({ imageUploading: true });
+
+    const { currentCompany } = this.props;
+    const { currentEmployee } = this.props;
+    this.props.uploadImagesToFirebaseStorage(this, currentCompany.id, currentEmployee.id);
+  };
+
+  renderAvatar() {
+    if (this.state.imageSelected) {
+      return (
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: this.state.avatar }} style={styles.image} resizeMethod="resize" />
+          <Icon
+            containerStyle={{ marginLeft: 8 }}
+            name="minus-circle"
+            type="feather"
+            size={30}
+            color={'#b7bbbf'}
+            onPress={() => {
+              this.props.deleteAvatarFromStorage(this.state.avatar);
+              this.setState({ avatar: '', imageSelected: false });
+            }}
+          />
+        </View>
+      );
+    }
+    return (
+      <AddImageBox
+        size={0.35}
+        iconType="MaterialIcons"
+        iconName="add-a-photo"
+        iconSize={85}
+        onPress={this.selectAvatarImg}
+      />
+    );
+  }
+
   render() {
     const { type } = this.props.navigation.state.params;
     const { name, phone, email, department, joinDate, rating, avatar } = this.props.currentEmployee;
 
     return (
-      <Container style={{ flex: 1, alignItems: 'center' }}>
+      <Container>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={
@@ -175,12 +238,8 @@ class AddEmployee extends Component {
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ width: '92%', marginBottom: 20 }}>
-                <AddImageBox
-                  size={0.35}
-                  iconType="MaterialIcons"
-                  iconName="add-a-photo"
-                  iconSize={85}
-                />
+                {this.renderAvatar()}
+
                 <InputForm
                   label="Name"
                   placeholder="Employee name..."
@@ -250,14 +309,14 @@ class AddEmployee extends Component {
                     mode="date"
                     androidMode="spinner"
                     placeholder="MM/DD/YYYY"
-                    format="MM/DD/YYYY"
-                    minDate="01-01-1920"
-                    maxDate={moment(new Date()).format('MM/DD/YYYY')}
+                    format="M/DD/YYYY"
+                    minDate="1-01-1920"
+                    maxDate={moment(new Date()).format('M/DD/YYYY')}
                     confirmBtnText="Confirm"
                     cancelBtnText="Cancel"
                     onDateChange={date => setFieldValue('joinDate', date)}
                   />
-                  {type === 'edit' && values.joinDate ? (
+                  {values.joinDate ? (
                     <Icon
                       name="minus-circle"
                       type="feather"
@@ -288,11 +347,12 @@ class AddEmployee extends Component {
                   title="Save"
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
                   onPress={handleSubmit}
+                  disabled={this.state.imageUploading}
                 />
                 {type === 'edit' ? (
                   <Button
                     title="Delete"
-                    buttonStyle={{ backgroundColor: 'red' }}
+                    buttonStyle={{ backgroundColor: 'red', marginTop: 30 }}
                     onPress={this.deleteCurrentEmployee}
                   />
                 ) : null}
@@ -313,7 +373,15 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { addEmployee, editEmployee, deleteEmployee, toggleEmployeeFetching, getCurrentEmployee }
+  {
+    addEmployee,
+    editEmployee,
+    deleteEmployee,
+    toggleEmployeeFetching,
+    getCurrentEmployee,
+    uploadImagesToFirebaseStorage,
+    deleteAvatarFromStorage
+  }
 )(AddEmployee);
 
 export const styles = StyleSheet.create({
@@ -340,6 +408,19 @@ export const styles = StyleSheet.create({
     width: 20,
     height: 30,
     borderRadius: 1,
-    backgroundColor: '#838486'
+    backgroundColor: '#0082C0' //'#838486'
+  },
+  imageContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    marginLeft: 25
+  },
+  image: {
+    alignSelf: 'center',
+    height: 128,
+    width: 128,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#b2b2b2'
   }
 });

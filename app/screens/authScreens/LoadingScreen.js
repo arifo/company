@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import * as Progress from 'react-native-progress';
 import firebase from 'firebase';
 
-import { loginAction } from '../../redux/actions';
+import { loginAction, alreadyLoggedIn } from '../../redux/actions';
 import Container from '../../components/Container';
 
 class LoadingScreen extends Component {
@@ -17,14 +17,24 @@ class LoadingScreen extends Component {
   }
 
   componentDidMount() {
+    console.log('loading screen this.props.loggedIn', this.props.loggedIn);
+    const { navigation } = this.props;
     this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
-      if (user != null) {
-        this.props.loginAction();
+      if (user) {
+        this.props.alreadyLoggedIn(navigation);
+        // if (this.props.loggedIn) {
+        //   this.props.navigation.navigate('App');
+        // }
+        console.log('user not null loggedIn state', this.props.loggedIn);
+        return;
       }
+      console.log(' this.props.navigation.navigate("Auth");');
+      this.props.navigation.navigate('Auth');
+      // this.props.navigation.navigate(this.props.loggedIn ? 'App' : 'Auth');
     });
-
-    this.props.navigation.navigate(this.props.loggedIn ? 'App' : 'Auth');
   }
+
+  componentWillUpdate() {}
   componentWillUnmount() {
     if (this.unsubscriber) {
       this.unsubscriber();
@@ -52,5 +62,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { loginAction }
+  { loginAction, alreadyLoggedIn }
 )(LoadingScreen);

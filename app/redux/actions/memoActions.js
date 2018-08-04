@@ -1,12 +1,9 @@
 import firebase from 'firebase';
 import { db } from '../../App';
 
-import { GET_MEMOS, GET_CURRENT_MEMO, TOGGLE_MEMO_FETCHING } from './types';
+import { GET_MEMOS, GET_CURRENT_MEMO, TOGGLE_MEMO_FETCHING, LISTENERS_UNSUBED } from './types';
 
 export const getMemos = id => (dispatch, getState) => {
-  if (!getState().auth.loggedIn) {
-    unsubscribe();
-  }
   const unsubscribe = db
     .collection('memos')
     .where('companyID', '==', id)
@@ -18,6 +15,11 @@ export const getMemos = id => (dispatch, getState) => {
       console.log('listener is fetching MEMO document!', arr);
       dispatch({ type: GET_MEMOS, payload: arr });
     });
+  if (!getState().auth.loggedIn) {
+    console.log('unsubscribing memo listener...');
+    unsubscribe();
+    dispatch({ type: LISTENERS_UNSUBED, payload: true });
+  }
 };
 
 export const getCurrentMemo = memoID => (dispatch, getState) => {

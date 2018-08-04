@@ -8,11 +8,16 @@ import {
   LISTENERS_UNSUBED
 } from './types';
 
-export const getCompanies = () => (dispatch, getState) => {
+export const getCompanies = unsub => (dispatch, getState) => {
+  if (!getState().auth.loggedIn && unsub) {
+    console.log('unsubscribing company listener...');
+    unsubscribe();
+    dispatch({ type: LISTENERS_UNSUBED, payload: true });
+  }
   const unsubscribe = db
     .collection('companies')
     .where('user', '==', firebase.auth().currentUser.uid)
-    .onSnapshot(querySnapshot => {
+    .onSnapshot({ includeMetadataChanges: true }, querySnapshot => {
       const arr = [];
       querySnapshot.forEach(doc => {
         arr.push(doc.data());
@@ -20,12 +25,6 @@ export const getCompanies = () => (dispatch, getState) => {
       console.log('listener is fetching Companies documents!', arr);
       dispatch({ type: GET_COMPANIES, payload: arr });
     });
-
-  if (!getState().auth.loggedIn) {
-    console.log('unsubscribe');
-    unsubscribe();
-    dispatch({ type: LISTENERS_UNSUBED, payload: true });
-  }
 };
 
 export const getCurrentCompany = companyID => (dispatch, getState) => {
