@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Text, Rating, Avatar } from 'react-native-elements';
-import { ScrollView, View, Image, ActivityIndicator, LayoutAnimation } from 'react-native';
+import { ScrollView, View, Image, ActivityIndicator } from 'react-native';
 import moment from 'moment';
 import { connect } from 'react-redux';
 
@@ -14,12 +14,7 @@ class ViewEmployee extends Component {
     this.props.getCurrentEmployee(employeeID);
   }
 
-  componentDidUpdate() {
-    LayoutAnimation.spring();
-  }
-
   render() {
-    console.log('this.props.isFetching', this.props.isFetching);
     if (this.props.isFetching) {
       return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

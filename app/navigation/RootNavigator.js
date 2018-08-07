@@ -125,12 +125,7 @@ const AppStack = createStackNavigator(
       })
     }
   },
-  {
-    // navigationOptions: {
-    //   header: null
-    // },
-    // initialRouteName: 'AddMemo'
-  }
+  {}
 );
 
 export default createSwitchNavigator(
@@ -141,6 +136,5 @@ export default createSwitchNavigator(
   },
   {
     initialRouteName: 'AuthLoading'
-    // initialRouteName: 'App'
   }
 );

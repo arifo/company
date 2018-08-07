@@ -3,31 +3,7 @@ import ImagePicker from 'react-native-image-picker';
 import moment from 'moment';
 import { db } from '../../App';
 
-import {
-  GET_EMPLOYEES,
-  GET_CURRENT_EMPLOYEE,
-  TOGGLE_EMPLOYE_FETCHING,
-  LISTENERS_UNSUBED
-} from './types';
-
-export const getEmployees = id => (dispatch, getState) => {
-  const unsubscribe = db
-    .collection('employees')
-    .where('companyID', '==', id)
-    .onSnapshot(querySnapshot => {
-      const arr = [];
-      querySnapshot.forEach(doc => {
-        arr.push(doc.data());
-      });
-      console.log('listener is fetching Employee document!', arr);
-      dispatch({ type: GET_EMPLOYEES, payload: arr });
-    });
-  if (!getState().auth.loggedIn) {
-    console.log('unsubscribing employee listener...');
-    unsubscribe();
-    dispatch({ type: LISTENERS_UNSUBED, payload: true });
-  }
-};
+import { GET_CURRENT_EMPLOYEE, TOGGLE_EMPLOYE_FETCHING } from './types';
 
 export const getCurrentEmployee = employeeID => (dispatch, getState) => {
   console.log('before if in employe action....getstate', getState().employee.isFetching);
@@ -76,7 +52,7 @@ export const deleteEmployee = employee => dispatch => {
   batch.commit();
 };
 
-export const editEmployee = (values, employeeID, timestamp, avataruRi) => dispatch => {
+export const editEmployee = (values, employeeID, timestamp, avataruRi, rating) => dispatch => {
   const docRef = db.collection('employees').doc(employeeID);
 
   docRef.set(
@@ -86,7 +62,7 @@ export const editEmployee = (values, employeeID, timestamp, avataruRi) => dispat
       email: values.email,
       department: values.department,
       joinDate: values.joinDate,
-      rating: values.rating,
+      rating,
       lastModified: timestamp,
       avatar: avataruRi
     },
@@ -163,8 +139,6 @@ export function uploadImagesToFirebaseStorage(state, companyID) {
       } else {
         const source = { uri: response.uri };
 
-        // You can also display the image using data:
-        // let source = { uri: 'data:image/jpeg;base64,' + response.data };
         const imgName = moment().valueOf();
         uploadImage(response.uri, imgName)
           .then(() => {

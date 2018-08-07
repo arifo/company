@@ -22,7 +22,6 @@ class LoginScreen extends Component {
   };
 
   render() {
-    console.log('LOGIN screen this.props.loggedIn', this.props.loggedIn);
     return (
       <Container style={{ flex: 1, backgroundColor: '#ffffff' }}>
         <ScrollView

@@ -548,6 +548,10 @@
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/@firebase/webchannel-wrapper/-/webchannel-wrapper-0.2.8.tgz#38a936b60b898a1ad0f3719543ff1a1031f60f8b"
 
+"@ptomasroos/react-native-multi-slider@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@ptomasroos/react-native-multi-slider/-/react-native-multi-slider-1.0.0.tgz#a4ea27b1320b93a1db9f696c24789695df6c9f30"
+
 abab@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.4.tgz#5faad9c2c07f60dd76770f71cf025b62a63cfd4e"
@@ -4934,7 +4938,7 @@ prompts@^0.1.9:
     kleur "^1.0.0"
     sisteransi "^0.1.1"
 
-prop-types@^15.5.10, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2:
+prop-types@^15.5.10, prop-types@^15.5.6, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz#05d5ca77b4453e985d60fc7ff8c859094a497102"
   dependencies:
@@ -5036,12 +5040,6 @@ react-native-alphabetlistview@^0.3.0:
     merge "^1.2.0"
     prop-types "^15.6.0"
 
-react-native-atoz-listview@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/react-native-atoz-listview/-/react-native-atoz-listview-0.0.7.tgz#ae1d8ac11a224aeacdf3b6f1c938b030c92788cd"
-  dependencies:
-    merge "^1.2.0"
-
 react-native-datepicker@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/react-native-datepicker/-/react-native-datepicker-1.7.2.tgz#58d0822591a0ac9b32aba082650222a0ee29669d"
@@ -5083,11 +5081,9 @@ react-native-modal-selector@^0.0.27:
   dependencies:
     prop-types "^15.5.10"
 
-react-native-progress@^3.5.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/react-native-progress/-/react-native-progress-3.5.0.tgz#d1ccc7f96dc17c609aedb43b2e6695d67deae0ec"
-  dependencies:
-    prop-types "^15.5.8"
+react-native-push-notification@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/react-native-push-notification/-/react-native-push-notification-3.1.1.tgz#99ce426e78e95788c298f73750cc4e68db04d7ab"
 
 react-native-safe-area-view@^0.7.0:
   version "0.7.0"
@@ -5101,13 +5097,15 @@ react-native-safe-area-view@^0.8.0:
   dependencies:
     hoist-non-react-statics "^2.3.1"
 
-react-native-section-list-get-item-layout@^2.2.3:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/react-native-section-list-get-item-layout/-/react-native-section-list-get-item-layout-2.2.3.tgz#152a8efdcb3847dbcbeb04cd2d0de4312d3d2fcb"
-
 react-native-segment-controller@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/react-native-segment-controller/-/react-native-segment-controller-1.0.0.tgz#940dff7f25531c4fcdc690a71e5def38bece67c9"
+
+react-native-slider@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/react-native-slider/-/react-native-slider-0.11.0.tgz#b68a0bc43c8422b24cd57947cc5ac2bcdb58fadc"
+  dependencies:
+    prop-types "^15.5.6"
 
 react-native-tab-view@^0.0.77:
   version "0.0.77"

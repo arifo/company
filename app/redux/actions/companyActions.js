@@ -5,16 +5,20 @@ import {
   GET_COMPANIES,
   GET_CURRENT_COMPANY,
   TOGGLE_COMPANY_FETCHING,
-  LISTENERS_UNSUBED
+  TOGGLE_LISTENER_FETCHING,
+  LISTENERS_UNSUBED,
+  GET_MEMOS,
+  GET_EMPLOYEES
 } from './types';
 
-export const getCompanies = unsub => (dispatch, getState) => {
-  if (!getState().auth.loggedIn && unsub) {
-    // console.log('unsubscribing company listener...');
-    unsubscribe();
-    dispatch({ type: LISTENERS_UNSUBED, payload: true });
-  }
-  const unsubscribe = db
+const listeners = {
+  company: {},
+  employee: {},
+  memo: {}
+};
+
+export const getCompanies = () => dispatch => {
+  listeners.company = db
     .collection('companies')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot({ includeMetadataChanges: true }, querySnapshot => {
@@ -22,16 +26,47 @@ export const getCompanies = unsub => (dispatch, getState) => {
       querySnapshot.forEach(doc => {
         arr.push(doc.data());
       });
-      // console.log('listener is fetching Companies documents!', arr);
-      dispatch({ type: GET_COMPANIES, payload: arr, isFetching: false });
+      dispatch({ type: GET_COMPANIES, payload: arr });
+      dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
     });
 };
 
-export const getCurrentCompany = companyID => (dispatch, getState) => {
-  // console.log('before if in company action....getstate', getState().company.isFetching);
-  if (getState().company.isFetching) {
-    // console.log('if in company action....getstate', getState().company.isFetching);
+export const getMemos = id => dispatch => {
+  listeners.memo = db
+    .collection('memos')
+    .where('companyID', '==', id)
+    .onSnapshot(querySnapshot => {
+      const arr = [];
+      querySnapshot.forEach(doc => {
+        arr.push(doc.data());
+      });
+      dispatch({ type: GET_MEMOS, payload: arr });
+    });
+};
 
+export const getEmployees = id => dispatch => {
+  listeners.employee = db
+    .collection('employees')
+    .where('companyID', '==', id)
+    .onSnapshot(querySnapshot => {
+      const arr = [];
+      querySnapshot.forEach(doc => {
+        arr.push(doc.data());
+      });
+      dispatch({ type: GET_EMPLOYEES, payload: arr });
+    });
+};
+
+export const unsubscribe = listenerName => {
+  // console.log(`unsubscribing ${listenerName} listener...`);
+  listeners[listenerName]();
+  return {
+    type: LISTENERS_UNSUBED
+  };
+};
+
+export const getCurrentCompany = companyID => (dispatch, getState) => {
+  if (getState().company.isFetching) {
     const docRef = db.collection('companies').doc(companyID);
 
     docRef
@@ -121,5 +156,9 @@ export const editCompany = (values, companyID, timestamp) => dispatch => {
 
 export const toggleCompanyFetching = fetching => ({
   type: TOGGLE_COMPANY_FETCHING,
+  payload: fetching
+});
+export const toggleListenerFetching = fetching => ({
+  type: TOGGLE_LISTENER_FETCHING,
   payload: fetching
 });

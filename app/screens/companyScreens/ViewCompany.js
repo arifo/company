@@ -12,7 +12,8 @@ import {
   getMemos,
   getCurrentCompany,
   toggleMemoFetching,
-  toggleEmployeeFetching
+  toggleEmployeeFetching,
+  unsubscribe
 } from '../../redux/actions';
 
 import Container from '../../components/Container';
@@ -38,8 +39,9 @@ class ViewCompany extends Component {
     this.props.getMemos(companyID);
   }
 
-  handleTabSwitch(index) {
-    this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
+  componentWillUnmount() {
+    this.props.unsubscribe('employee');
+    this.props.unsubscribe('memo');
   }
 
   onEmployeeSelect = item => {
@@ -72,8 +74,13 @@ class ViewCompany extends Component {
     });
   };
 
+  handleTabSwitch(index) {
+    this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
+  }
+
   renderEmployeeTab() {
     const data = this.props.employees;
+
     return (
       <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
         <View
@@ -173,7 +180,6 @@ class ViewCompany extends Component {
   }
 
   render() {
-    console.log('Copany fethcing this.props.isFetching', this.props.isFetching);
     if (this.props.isFetching) {
       return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -184,11 +190,11 @@ class ViewCompany extends Component {
     const {
       name,
       description,
-      employees,
-      memos,
+
       createdAt,
       lastModified
     } = this.props.currentCompany;
+
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -215,7 +221,7 @@ class ViewCompany extends Component {
           <CustomCard>
             <SegmentControl
               values={['Employees', 'Memos']}
-              badges={[employees.length, memos.length]}
+              badges={[this.props.employees.length, this.props.memos.length]}
               selectedIndex={this.state.index}
               height={40}
               onTabPress={this.handleTabSwitch.bind(this)}
@@ -262,7 +268,14 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { getEmployees, getMemos, getCurrentCompany, toggleMemoFetching, toggleEmployeeFetching }
+  {
+    getEmployees,
+    getMemos,
+    getCurrentCompany,
+    toggleMemoFetching,
+    toggleEmployeeFetching,
+    unsubscribe
+  }
 )(ViewCompany);
 
 const styles = {

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView, View, Text, ActivityIndicator, LayoutAnimation } from 'react-native';
+import { ScrollView, View, Text, ActivityIndicator } from 'react-native';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import _ from 'lodash';
@@ -12,13 +12,12 @@ import CustomCard from '../../components/CustomCard';
 class ViewMemo extends Component {
   componentDidMount() {
     const { memoID } = this.props.navigation.state.params;
+    console.log('memoID', memoID);
     this.props.getCurrentMemo(memoID);
-    console.log('update memo');
   }
 
-  componentDidUpdate() {
-    LayoutAnimation.spring();
-  }
+  componentDidUpdate() {}
+
   renderViewMore(onPress) {
     return (
       <View
@@ -75,22 +74,30 @@ class ViewMemo extends Component {
               renderViewMore={this.renderViewMore}
               renderViewLess={this.renderViewLess}
               textStyle={{ textAlign: 'justify' }}
-            />
-            <Text>{note}</Text>
+            >
+              <Text>{note}</Text>
+            </ViewMoreText>
           </CustomCard>
           {_.isEmpty(selectedContact) ? null : (
             <CustomCard label="Contact">
-              <Text>{selectedContact[0].name}</Text>
-              <Text>{selectedContact[0].phone}</Text>
-              <Text>{selectedContact[0].email}</Text>
+              <Text>name: {selectedContact[0].name}</Text>
+              <Text>phone: {selectedContact[0].phone}</Text>
+              <Text>email: {selectedContact[0].email}</Text>
             </CustomCard>
           )}
 
           <CustomCard label="Reminders">
             {reminders.length > 0 ? (
               reminders.map((val, key) => (
-                <Text key={key}>
-                  {key + 1}. {val}
+                <Text
+                  key={key}
+                  style={
+                    moment() < moment(val, 'M/DD/YYYY HH:mm')
+                      ? { fontSize: 14, fontWeight: '700', color: 'green' }
+                      : { fontSize: 14, fontWeight: '700', color: 'red' }
+                  }
+                >
+                  {key + 1}. {moment().to(moment(val, 'M/DD/YYYY HH:mm'))}
                 </Text>
               ))
             ) : (

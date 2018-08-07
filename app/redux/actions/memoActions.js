@@ -1,37 +1,15 @@
 import firebase from 'firebase';
 import { db } from '../../App';
 
-import { GET_MEMOS, GET_CURRENT_MEMO, TOGGLE_MEMO_FETCHING, LISTENERS_UNSUBED } from './types';
-
-export const getMemos = id => (dispatch, getState) => {
-  const unsubscribe = db
-    .collection('memos')
-    .where('companyID', '==', id)
-    .onSnapshot(querySnapshot => {
-      const arr = [];
-      querySnapshot.forEach(doc => {
-        arr.push(doc.data());
-      });
-      console.log('listener is fetching MEMO document!', arr);
-      dispatch({ type: GET_MEMOS, payload: arr });
-    });
-  if (!getState().auth.loggedIn) {
-    console.log('unsubscribing memo listener...');
-    unsubscribe();
-    dispatch({ type: LISTENERS_UNSUBED, payload: true });
-  }
-};
+import { GET_CURRENT_MEMO, TOGGLE_MEMO_FETCHING } from './types';
 
 export const getCurrentMemo = memoID => (dispatch, getState) => {
-  console.log('before if in action....getstate', getState().memo.isFetching);
   if (getState().memo.isFetching) {
-    console.log('if in action....getstate', getState().memo.isFetching);
     const docRef = db.collection('memos').doc(memoID);
     docRef
       .get()
       .then(doc => {
         if (doc.exists) {
-          console.log('Fetched document!', doc.data());
           dispatch({ type: GET_CURRENT_MEMO, memo: doc.data(), isFetching: false });
         } else {
           console.log('No such document!');
@@ -65,14 +43,14 @@ export const deleteMemo = memo => dispatch => {
   batch.commit();
 };
 
-export const editMemo = (values, memoID, timestamp) => dispatch => {
+export const editMemo = (values, memoID, reminders, timestamp) => dispatch => {
   const docRef = db.collection('memos').doc(memoID);
 
   docRef.set(
     {
       title: values.title,
       note: values.note,
-      reminders: values.reminders,
+      reminders,
       contact: values.contact,
       lastModified: timestamp
     },

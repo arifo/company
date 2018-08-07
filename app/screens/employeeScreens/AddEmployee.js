@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Button, Card, FormLabel, Slider, Text, Icon } from 'react-native-elements';
+import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { ScrollView, View, StyleSheet, Alert, Image } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
+import Slider from 'react-native-slider';
 
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
@@ -33,36 +34,29 @@ class AddEmployee extends Component {
     this.state = {
       avatar: '',
       imageSelected: false,
-      imageUploading: false
+      imageUploading: false,
+      rating: 10
     };
   }
 
   componentDidMount() {
     const { type } = this.props.navigation.state.params;
+    const { avatar, rating } = this.props.currentEmployee;
+
     if (this.props.currentEmployee.avatar) {
-      this.setState({ avatar: this.props.currentEmployee.avatar, imageSelected: true });
+      this.setState({ avatar, imageSelected: true, rating });
     }
     if (type !== 'edit') {
-      this.setState({ avatar: '', imageSelected: false });
+      this.setState({ avatar: '', imageSelected: false, rating: 10 });
     }
-  }
-
-  componentWillUpdate() {
-    // LayoutAnimation.spring();
-  }
-  componentWillUnmount() {
-    console.log('unmount add empol');
   }
 
   onSave = async values => {
-    console.log('save 2');
     const { type } = this.props.navigation.state.params;
     return type === 'edit' ? this.saveEditEmployee(values) : this.saveNewEmployee(values);
   };
 
   saveNewEmployee = value => {
-    console.log('save 1');
-
     const { id } = this.props.currentCompany;
     UUIDGenerator.getRandomUUID().then(uuid => {
       const employeeInfo = {
@@ -73,7 +67,7 @@ class AddEmployee extends Component {
         email: value.email,
         department: value.department,
         joinDate: value.joinDate,
-        rating: value.rating,
+        rating: this.state.rating,
         avatar: this.state.avatar,
         createdAt: moment().valueOf(),
         lastModified: ''
@@ -85,10 +79,11 @@ class AddEmployee extends Component {
 
   saveEditEmployee = value => {
     const { currentEmployee, currentCompany } = this.props;
+    const { avatar, rating } = this.state;
     const { id } = currentEmployee;
     this.props.toggleEmployeeFetching(true);
     const lastModified = moment().valueOf();
-    this.props.editEmployee(value, id, lastModified, this.state.avatar);
+    this.props.editEmployee(value, id, lastModified, avatar, rating);
     this.props.getCurrentEmployee(id);
     this.resetStack(currentEmployee, currentCompany);
   };
@@ -200,7 +195,7 @@ class AddEmployee extends Component {
 
   render() {
     const { type } = this.props.navigation.state.params;
-    const { name, phone, email, department, joinDate, rating, avatar } = this.props.currentEmployee;
+    const { name, phone, email, department, joinDate } = this.props.currentEmployee;
 
     return (
       <Container>
@@ -213,16 +208,14 @@ class AddEmployee extends Component {
                     phone,
                     email,
                     department,
-                    joinDate,
-                    rating
+                    joinDate
                   }
                 : {
                     name: '',
                     phone: '',
                     email: '',
                     department: '',
-                    joinDate: '',
-                    rating: 10
+                    joinDate: ''
                   }
             }
             onSubmit={this.onSave}
@@ -330,17 +323,18 @@ class AddEmployee extends Component {
                 </View>
                 <View style={styles.ratingContainer}>
                   <FormLabel>Rating</FormLabel>
-                  <Text style={{ fontSize: 18, fontWeight: '500' }}>{values.rating}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '500' }}>{this.state.rating}</Text>
                 </View>
                 <View style={styles.ratingSliderContainer}>
                   <Slider
-                    value={values.rating}
-                    onValueChange={rate => setFieldValue('rating', rate)}
+                    trackStyle={styles.sliderTrack}
+                    thumbStyle={styles.sliderThumb}
+                    minimumTrackTintColor="#30a935"
+                    value={this.state.rating}
+                    onValueChange={value => this.setState({ rating: value })}
                     minimumValue={0}
                     maximumValue={100}
                     step={5}
-                    thumbStyle={styles.sliderThumbStyle}
-                    minimumTrackTintColor="#ec4c46"
                   />
                 </View>
                 <Button
@@ -360,6 +354,7 @@ class AddEmployee extends Component {
             )}
           />
         </ScrollView>
+        <View style={styles.ratingSliderContainer} />
       </Container>
     );
   }
@@ -404,11 +399,17 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 30
   },
-  sliderThumbStyle: {
-    width: 20,
+  sliderTrack: {
+    height: 4,
+    borderRadius: 2
+  },
+  sliderThumb: {
+    width: 30,
     height: 30,
-    borderRadius: 1,
-    backgroundColor: '#0082C0' //'#838486'
+    borderRadius: 30 / 2,
+    backgroundColor: 'white',
+    borderColor: '#30a935',
+    borderWidth: 2
   },
   imageContainer: {
     flexDirection: 'row',

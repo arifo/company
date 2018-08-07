@@ -15,15 +15,11 @@ class SignUpScreen extends Component {
     this.passTextInput = null;
     this.confirmPassTextInput = null;
   }
-  componentDidUpdate() {
-    const { loggedIn, navigation } = this.props;
-    if (loggedIn) {
-      navigation.navigate('App');
-    }
-  }
+  componentDidUpdate() {}
 
   onSignUp = (values, bag) => {
-    this.props.signUpAction(values, bag);
+    const { navigation } = this.props;
+    this.props.signUpAction(values, bag, navigation);
   };
 
   render() {

@@ -5,7 +5,13 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import AlphabetListView from 'react-native-alphabetlistview';
 
-import { logoutAction, getCompanies, toggleCompanyFetching } from '../redux/actions';
+import {
+  logoutAction,
+  getCompanies,
+  toggleCompanyFetching,
+  toggleListenerFetching,
+  unsubscribe
+} from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
@@ -17,12 +23,12 @@ class Companies extends Component {
   };
 
   componentDidMount() {
-    this.props.toggleCompanyFetching(true);
+    this.props.toggleListenerFetching(true);
     this.props.getCompanies();
   }
 
   componentWillUnmount() {
-    this.props.getCompanies(true);
+    this.props.unsubscribe('company');
   }
 
   onChangeText = value => {
@@ -44,10 +50,10 @@ class Companies extends Component {
     });
   };
 
-  onLogoutPress = async () => {
+  onLogoutPress = () => {
     const { navigation } = this.props;
-    await this.props.logoutAction(navigation);
-    await this.props.getCompanies();
+    this.props.logoutAction();
+    navigation.navigate('AuthLoading');
   };
 
   getFirstLetterFrom(value) {
@@ -90,8 +96,6 @@ class Companies extends Component {
   );
 
   render() {
-    console.log('this.props.isFetching companies', this.props.isFetching);
-
     const { companies } = this.props;
     const data = _
       .chain(companies)
@@ -99,7 +103,6 @@ class Companies extends Component {
       .filter(item => item.name.includes(this.state.value))
       .groupBy(d => this.getFirstLetterFrom(d.name))
       .value();
-
     return (
       <Container>
         <Header
@@ -123,11 +126,11 @@ class Companies extends Component {
               type="ionicon"
               color="#fff"
               size={25}
-              onPress={() =>
+              onPress={() => {
                 this.props.navigation.navigate('AddCompany', {
                   title: 'New Company'
-                })
-              }
+                });
+              }}
               underlayColor="transparent"
             />
           }
@@ -160,7 +163,7 @@ class Companies extends Component {
             underlayColor="transparent"
           />
         </View>
-        {this.props.isFetching ? (
+        {this.props.listerFetching ? (
           <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
           </View>
@@ -194,10 +197,11 @@ const mapStateToProps = state => ({
   loggedIn: state.auth.loggedIn,
   companies: state.company.companies,
   isFetching: state.company.isFetching,
+  listerFetching: state.company.listerFetching,
   auth: state.auth
 });
 
 export default connect(
   mapStateToProps,
-  { logoutAction, getCompanies, toggleCompanyFetching }
+  { logoutAction, getCompanies, toggleCompanyFetching, toggleListenerFetching, unsubscribe }
 )(Companies);
