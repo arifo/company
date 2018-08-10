@@ -25,6 +25,7 @@
     "react-native-image-preview": "^0.3.1",
     "react-native-image-zoom-viewer": "^2.2.14",
     "react-native-lightbox": "^0.7.0",
+    "react-native-modal-datetime-picker": "^6.0.0",
     "react-native-modal-selector": "^0.0.27",
     "react-native-push-notification": "^3.1.1",
     "react-native-segment-controller": "^1.0.0",

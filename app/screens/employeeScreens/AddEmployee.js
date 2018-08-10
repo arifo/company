@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
-import { ScrollView, View, StyleSheet, Alert, Image } from 'react-native';
+import { ScrollView, View, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
 import Slider from 'react-native-slider';
+import DateTimePicker from 'react-native-modal-datetime-picker';
 
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
@@ -35,7 +36,8 @@ class AddEmployee extends Component {
       avatar: '',
       imageSelected: false,
       imageUploading: false,
-      rating: 10
+      rating: 10,
+      isDateTimePickerVisible: false
     };
   }
 
@@ -170,6 +172,10 @@ class AddEmployee extends Component {
     );
   }
 
+  showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
+
+  hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
+
   render() {
     const { type } = this.props.navigation.state.params;
     const { name, phone, email, department, joinDate } = this.props.currentEmployee;
@@ -281,30 +287,44 @@ class AddEmployee extends Component {
                 />
                 <View style={styles.joinDateContainer}>
                   <FormLabel>Join date</FormLabel>
-                  <DatePicker
-                    style={{ width: 150 }}
-                    date={values.joinDate}
-                    mode="date"
-                    androidMode="spinner"
-                    placeholder="MM/DD/YYYY"
-                    format="M/DD/YYYY"
-                    minDate="1-01-1920"
-                    maxDate={moment(new Date()).format('M/DD/YYYY')}
-                    confirmBtnText="Confirm"
-                    cancelBtnText="Cancel"
-                    onDateChange={date => setFieldValue('joinDate', date)}
-                  />
-                  {values.joinDate ? (
-                    <Icon
-                      name="minus-circle"
-                      type="feather"
-                      size={30}
-                      color={'#b7bbbf'}
-                      onPress={() => {
-                        setFieldValue('joinDate', '');
+
+                  <View style={styles.datePickerContainer}>
+                    <TouchableOpacity
+                      onPress={this.showDateTimePicker}
+                      style={styles.pickerContainer}
+                    >
+                      <View style={styles.dateValueContainer}>
+                        {values.joinDate ? (
+                          <Text>{moment(values.joinDate).format('MM/DD/YYYY')}</Text>
+                        ) : (
+                          <Text>MM/DD/YYYY</Text>
+                        )}
+                      </View>
+                      <Icon name="calendar" type="font-awesome" size={32} color={'#008fff'} />
+                    </TouchableOpacity>
+                    {values.joinDate ? (
+                      <Icon
+                        name="minus-circle"
+                        type="feather"
+                        size={30}
+                        color={'#b7bbbf'}
+                        onPress={() => {
+                          setFieldValue('joinDate', '');
+                        }}
+                      />
+                    ) : null}
+                    <DateTimePicker
+                      isVisible={this.state.isDateTimePickerVisible}
+                      mode="date"
+                      onCancel={this.hideDateTimePicker}
+                      onConfirm={date => {
+                        console.log('A date has been picked: ', date);
+                        const d = date.toISOString();
+                        setFieldValue('joinDate', d);
+                        this.hideDateTimePicker();
                       }}
                     />
-                  ) : null}
+                  </View>
                 </View>
                 <View style={styles.ratingContainer}>
                   <FormLabel>Rating</FormLabel>
@@ -367,11 +387,27 @@ export default connect(
 
 export const styles = StyleSheet.create({
   joinDateContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    // alignItems: 'center',
+    //flexDirection: 'row',
+    //justifyContent: 'space-between',
     marginVertical: 8,
     paddingRight: 10
+  },
+  datePickerContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end'
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingRight: 12
+  },
+  dateValueContainer: {
+    marginRight: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,.1)'
   },
   ratingContainer: {
     alignItems: 'flex-end',

@@ -1,5 +1,13 @@
 import React, { Component } from 'react';
-import { PlatformIOS, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import {
+  PlatformIOS,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  BackHandler
+} from 'react-native';
 import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -17,22 +25,43 @@ import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
 
 class Companies extends Component {
-  state = {
-    sortKey: 'asc',
-    value: ''
-  };
+  constructor(props) {
+    super(props);
+    this.search = null;
+
+    this.state = {
+      sortKey: 'asc',
+      value: '',
+      alphabetList: false,
+      searchNoResult: false,
+      searchFocused: false
+    };
+  }
 
   componentDidMount() {
     this.props.toggleListenerFetching(true);
     this.props.getCompanies();
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (this.state.searchFocused) {
+        this.search.blur();
+        this.setState({ value: '' });
+        return true;
+      }
+      return false;
+    });
   }
 
   componentWillUnmount() {
     this.props.unsubscribe('company');
+    this.backHandler.remove();
   }
 
   onChangeText = value => {
-    this.setState({ value });
+    this.setState({ value, searchNoResult: true });
+  };
+
+  onEndChangeText = () => {
+    this.setState({ searchNoResult: false, searchFocused: false });
   };
 
   onListItemPress = item => {
@@ -83,7 +112,13 @@ class Companies extends Component {
       }}
       onPress={() => this.onListItemPress(item.item)}
     >
-      <Text style={{ fontSize: 20, color: 'rgba(0,0,0,.5)' }}>{item.item.name}</Text>
+      <Text
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={{ fontSize: 20, color: 'rgba(0,0,0,.5)' }}
+      >
+        {item.item.name}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -107,14 +142,76 @@ class Companies extends Component {
     </View>
   );
 
+  renderList(data) {
+    if (this.state.alphabetList) {
+      return (
+        <AlphabetListView
+          data={data}
+          style={{ backgroundColor: '#fff' }}
+          sectionHeaderHeight={30}
+          cellHeight={40}
+          sectionHeader={this.renderSectionHeader}
+          cell={this.renderCell}
+          updateScrollState
+          sectionListFontStyle={{ color: 'red' }}
+        />
+      );
+    }
+    return (
+      <FlatList
+        data={data}
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff' }}
+        component={TouchableOpacity}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: 'rgba(0,0,0,.1)',
+              justifyContent: 'center',
+              paddingLeft: 15,
+              paddingVertical: 5
+            }}
+            onPress={() => this.onListItemPress(item)}
+          >
+            <Text style={{ fontSize: 20, color: 'rgba(0,0,0,.5)' }}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      />
+    );
+  }
+
+  renderBlankList() {
+    return this.state.searchNoResult ? (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 22, fontWeight: '600' }}>No results!!!</Text>
+      </View>
+    ) : (
+      <AddImageBox
+        size={0.45}
+        iconType="entypo"
+        iconName="add-to-list"
+        iconSize={100}
+        text="Add Company"
+        onPress={this.onAddImagePress}
+      />
+    );
+  }
+
   render() {
     const { companies } = this.props;
-    const data = _
-      .chain(companies)
-      .orderBy(['name'], [this.state.sortKey])
-      .filter(item => item.name.includes(this.state.value))
-      .groupBy(d => this.getFirstLetterFrom(d.name))
+    let data = _.chain(companies)
+      .orderBy([item => item.name.toLowerCase()], [this.state.sortKey])
+      .filter(item => {
+        const i = item.name.toLowerCase();
+        const k = this.state.value.toLowerCase();
+        return i.includes(k);
+      })
       .value();
+    if (this.state.alphabetList) {
+      data = _.groupBy(data, d => this.getFirstLetterFrom(d.name));
+    }
+
     return (
       <Container>
         <Header
@@ -150,7 +247,14 @@ class Companies extends Component {
         />
         <View style={{ flexDirection: 'row' }}>
           <SearchBar
+            ref={search => (this.search = search)}
+            onSubmitEditing={this.onEndChangeText}
+            onBlur={this.onEndChangeText}
+            onClearText={this.onEndChangeText}
             value={this.state.value}
+            onFocus={() => {
+              this.setState({ searchFocused: true });
+            }}
             lightTheme
             showLoading
             containerStyle={{ backgroundColor: '#e0e0e2', flex: 0.9 }}
@@ -174,32 +278,24 @@ class Companies extends Component {
             }}
             underlayColor="transparent"
           />
+          <Icon
+            name="sort-by-alpha"
+            type="materialicons"
+            color={this.state.alphabetList ? '#008fff' : '#ffffff'}
+            size={35}
+            containerStyle={{ flex: 0.1, paddingRight: 8 }}
+            onPress={() => {
+              this.setState(previousState => ({ alphabetList: !previousState.alphabetList }));
+            }}
+            underlayColor="transparent"
+          />
         </View>
         {this.props.listerFetching ? (
           <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
           </View>
         ) : null}
-        {_.isEmpty(data) ? (
-          <AddImageBox
-            size={0.45}
-            iconType="entypo"
-            iconName="add-to-list"
-            iconSize={100}
-            text="Add Company"
-            onPress={this.onAddImagePress}
-          />
-        ) : (
-          <AlphabetListView
-            data={data}
-            style={{ backgroundColor: '#fff' }}
-            sectionHeaderHeight={30}
-            cellHeight={40}
-            sectionHeader={this.renderSectionHeader}
-            cell={this.renderCell}
-            updateScrollState
-          />
-        )}
+        {_.isEmpty(data) ? this.renderBlankList() : this.renderList(data)}
       </Container>
     );
   }

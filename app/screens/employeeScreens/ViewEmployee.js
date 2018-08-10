@@ -84,7 +84,7 @@ class ViewEmployee extends Component {
           <CustomCard label="Department" text={department} />
           <CustomCard
             label="Join date"
-            text={joinDate ? moment(joinDate, 'MM/DD/YYYY').format('MMMM Do YYYY') : '-'}
+            text={joinDate ? moment(joinDate).format('MMMM Do YYYY') : '-'}
           />
           <CustomCard label="Rating">
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

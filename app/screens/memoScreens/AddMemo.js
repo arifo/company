@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView, View, StyleSheet, Alert } from 'react-native';
+import { ScrollView, View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -11,6 +11,7 @@ import moment from 'moment';
 import _ from 'lodash';
 import { NavigationActions, StackActions } from 'react-navigation';
 import PushNotification from 'react-native-push-notification';
+import DateTimePicker from 'react-native-modal-datetime-picker';
 
 import {
   addMemo,
@@ -29,7 +30,8 @@ class AddMemo extends Component {
     this.state = {
       textInputValue: '',
       reminders: [],
-      notificationsToDelete: ['', '', '', '', '']
+      notificationsToDelete: ['', '', '', '', ''],
+      isDateTimePickerVisible: false
     };
     this.noteTextInput = null;
   }
@@ -162,10 +164,26 @@ class AddMemo extends Component {
     );
   };
 
+  _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
+
+  _hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
+
+  _handleDatePicked = date => {
+    console.log('A date has been picked: ', date);
+
+    const newArray = this.state.reminders;
+    newArray[key] = date;
+    this.setState({ reminders: newArray });
+
+    this._hideDateTimePicker();
+  };
+
+  _renderDate = key => moment(`${this.state.reminders[key]}`).format('M/DD/YYYY HH:mm');
+
   render() {
     const { type } = this.props.navigation.state.params;
     const { title, note, contact } = this.props.currentMemo;
-
+    console.log('add memo state', this.state.reminders);
     return (
       <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
@@ -236,26 +254,50 @@ class AddMemo extends Component {
                 <FormLabel>Remider</FormLabel>
                 {this.state.reminders.map((v, key) => (
                   <View key={key} style={styles.newReminderContainer}>
-                    <DatePicker
-                      style={{ width: 200 }}
-                      date={this.state.reminders[key]}
-                      mode="datetime"
-                      androidMode="spinner"
-                      placeholder="M/DD/YYYY HH:mm"
-                      format="M/DD/YYYY HH:mm:ss"
-                      minDate="1-01-1920"
-                      confirmBtnText="Confirm"
-                      cancelBtnText="Cancel"
-                      onDateChange={date => {
-                        const newArray = this.state.reminders;
-                        newArray[key] = date;
-                        this.setState({ reminders: newArray });
-                      }}
-                    />
+                    <View style={{ flex: 1 }}>
+                      <TouchableOpacity
+                        onPress={this._showDateTimePicker}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          paddingRight: 12
+                        }}
+                      >
+                        <View
+                          style={{
+                            marginRight: 8,
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(0,0,0,.1)'
+                          }}
+                        >
+                          {this.state.reminders[key] ? (
+                            <Text>{this._renderDate(key)}</Text>
+                          ) : (
+                            <Text>M/DD/YYYY HH:mm</Text>
+                          )}
+                        </View>
+                        <Icon name="calendar" type="font-awesome" size={32} color={'#008fff'} />
+                      </TouchableOpacity>
+                      <DateTimePicker
+                        isVisible={this.state.isDateTimePickerVisible}
+                        mode="datetime"
+                        onCancel={this._hideDateTimePicker}
+                        onConfirm={date => {
+                          console.log('A date has been picked: ', date);
+
+                          const newArray = this.state.reminders;
+                          newArray[key] = date.toISOString();
+                          this.setState({ reminders: newArray });
+
+                          this._hideDateTimePicker();
+                        }}
+                      />
+                    </View>
                     <Icon
-                      name="minus-circle"
-                      type="feather"
-                      size={30}
+                      name="minus"
+                      type="simple-line-icon"
+                      size={28}
                       color={'#b7bbbf'}
                       onPress={() => {
                         const newArray = this.state.reminders;
@@ -268,11 +310,20 @@ class AddMemo extends Component {
                 {this.state.reminders.length <= 4 &&
                 this.state.reminders[this.state.reminders.length - 1] !== '' ? (
                   <View style={styles.addReminderContainer}>
-                    <Text style={styles.addTextStyle}>Add reminder</Text>
+                    <Text
+                      onPress={() => {
+                        const newArray = this.state.reminders;
+                        newArray.push('');
+                        this.setState({ reminders: newArray });
+                      }}
+                      style={styles.addTextStyle}
+                    >
+                      Add reminder
+                    </Text>
                     <Icon
-                      name="plus-circle"
-                      type="feather"
-                      size={30}
+                      name="plus"
+                      type="simple-line-icon"
+                      size={28}
                       color={'#b7bbbf'}
                       onPress={() => {
                         const newArray = this.state.reminders;
@@ -280,6 +331,19 @@ class AddMemo extends Component {
                         this.setState({ reminders: newArray });
                       }}
                     />
+                  </View>
+                ) : null}
+                {this.state.reminders.length > 1 ? (
+                  <View style={[styles.addReminderContainer, { paddingVertical: 15 }]}>
+                    <Text
+                      onPress={() => {
+                        this.setState({ reminders: [] });
+                      }}
+                      style={[styles.addTextStyle, { color: 'red' }]}
+                    >
+                      Delete all reminders
+                    </Text>
+                    <Icon name="close" type="simple-line-icon" size={28} color={'red'} />
                   </View>
                 ) : null}
 
