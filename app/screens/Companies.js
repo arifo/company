@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { PlatformIOS, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { PlatformIOS, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -51,9 +51,21 @@ class Companies extends Component {
   };
 
   onLogoutPress = () => {
-    const { navigation } = this.props;
-    this.props.logoutAction();
-    navigation.navigate('AuthLoading');
+    Alert.alert(
+      'Are sure you want to Logout?',
+      '',
+      [
+        {
+          text: 'Yes',
+          onPress: () => {
+            this.props.logoutAction();
+            this.props.navigation.navigate('AuthLoading');
+          }
+        },
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
+      ],
+      { cancelable: true }
+    );
   };
 
   getFirstLetterFrom(value) {

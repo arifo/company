@@ -5040,6 +5040,10 @@ react-native-alphabetlistview@^0.3.0:
     merge "^1.2.0"
     prop-types "^15.6.0"
 
+react-native-communications@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/react-native-communications/-/react-native-communications-2.2.1.tgz#7883b56b20a002eeb790c113f8616ea8692ca795"
+
 react-native-datepicker@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/react-native-datepicker/-/react-native-datepicker-1.7.2.tgz#58d0822591a0ac9b32aba082650222a0ee29669d"
@@ -5071,15 +5075,51 @@ react-native-elements@^0.19.1:
     opencollective "^1.0.3"
     prop-types "^15.5.8"
 
+react-native-image-pan-zoom@^2.1.7:
+  version "2.1.7"
+  resolved "https://registry.yarnpkg.com/react-native-image-pan-zoom/-/react-native-image-pan-zoom-2.1.7.tgz#1c066e66f8f345f5e1fc187f02d92c482952bb59"
+
 react-native-image-picker@^0.26.10:
   version "0.26.10"
   resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-0.26.10.tgz#0bb9ab928984948c67aee0b9e64216bee007a9fc"
+
+react-native-image-preview@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/react-native-image-preview/-/react-native-image-preview-0.3.1.tgz#e949369bb84acab692207538f72c15ce736fa53d"
+  dependencies:
+    prop-types "^15.6.0"
+    react-native-image-progress "1.0.1"
+    react-native-progress "3.4.0"
+
+react-native-image-progress@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/react-native-image-progress/-/react-native-image-progress-1.0.1.tgz#5ceb4cfefd39d7ebdffab802bc984b5a0fc41021"
+  dependencies:
+    prop-types "^15.5.10"
+
+react-native-image-zoom-viewer@^2.2.14:
+  version "2.2.14"
+  resolved "https://registry.yarnpkg.com/react-native-image-zoom-viewer/-/react-native-image-zoom-viewer-2.2.14.tgz#8f1f3e94fc4b19968b85b84a08ec0db7d5de7c5f"
+  dependencies:
+    react-native-image-pan-zoom "^2.1.7"
+
+react-native-lightbox@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/react-native-lightbox/-/react-native-lightbox-0.7.0.tgz#e52b4d7fcc141f59d7b23f0180de535e35b20ec9"
+  dependencies:
+    prop-types "^15.5.10"
 
 react-native-modal-selector@^0.0.27:
   version "0.0.27"
   resolved "https://registry.yarnpkg.com/react-native-modal-selector/-/react-native-modal-selector-0.0.27.tgz#27f51168596f7ac6ed5edfbaa3e43c0ddfee6415"
   dependencies:
     prop-types "^15.5.10"
+
+react-native-progress@3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-progress/-/react-native-progress-3.4.0.tgz#c002e6efb2f0b82dd6889510e669c492da2718ac"
+  dependencies:
+    prop-types "^15.5.8"
 
 react-native-push-notification@^3.1.1:
   version "3.1.1"

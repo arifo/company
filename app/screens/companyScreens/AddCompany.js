@@ -135,7 +135,7 @@ class AddCompany extends Component {
             onSubmit={this.onSubmit}
             validationSchema={Yup.object().shape({
               name: Yup.string().required(),
-              description: Yup.string().required()
+              description: Yup.string().notRequired()
             })}
             render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
               <Card containerStyle={{ flexGrow: 1 }}>

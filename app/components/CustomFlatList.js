@@ -4,7 +4,7 @@ import { Avatar, Text } from 'react-native-elements';
 import moment from 'moment';
 
 const Item = props => {
-  const { onPress, isMemoTab, item } = props;
+  const { onPress, isMemoTab, item, visible, close, avatarPress } = props;
   return (
     <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.8}>
       {isMemoTab ? (
@@ -19,11 +19,15 @@ const Item = props => {
       ) : (
         <View style={styles.employeRowStyle}>
           {item.avatar ? (
-            <Image
-              source={{ uri: item.avatar }}
-              style={styles.profileImage}
-              resizeMethod="resize"
-            />
+            <View>
+              <TouchableOpacity activeOpacity={0.9} onPress={() => avatarPress(item.avatar)}>
+                <Image
+                  source={{ uri: item.avatar }}
+                  style={styles.profileImage}
+                  resizeMethod="resize"
+                />
+              </TouchableOpacity>
+            </View>
           ) : (
             <Avatar
               rounded

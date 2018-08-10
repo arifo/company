@@ -45,38 +45,9 @@ class AddMemo extends Component {
     }
   }
 
-  componentWillUpdate() {}
-
   onSave = values => {
     const { type } = this.props.navigation.state.params;
     return type === 'edit' ? this.saveEditMemo(values) : this.saveNewMemo(values);
-  };
-
-  resetStack = (item, currentCompany) => {
-    this.props.navigation.dispatch(
-      StackActions.reset({
-        index: 2,
-        actions: [
-          NavigationActions.navigate({
-            routeName: 'Companies'
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewCompany',
-            params: {
-              title: currentCompany.name,
-              companyID: currentCompany.id
-            }
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewMemo',
-            params: {
-              title: item.title,
-              memoID: item.id
-            }
-          })
-        ]
-      })
-    );
   };
 
   scheduleNotif(reminders, id, memo, company) {
@@ -101,6 +72,10 @@ class AddMemo extends Component {
     });
   }
 
+  cancelNotif(id) {
+    PushNotification.cancelLocalNotifications({ id });
+  }
+
   saveNewMemo = value => {
     const reminders =
       this.state.reminders[this.state.reminders.length - 1] === ''
@@ -120,13 +95,12 @@ class AddMemo extends Component {
       };
       this.props.addMemo(memo, uuid);
       this.scheduleNotif(reminders, id, memo, this.props.currentCompany);
-      this.resetStack(memo, this.props.currentCompany);
+      this.props.navigation.replace('ViewMemo', {
+        title: memo.title,
+        memoID: memo.id
+      });
     });
   };
-
-  cancelNotif(id) {
-    PushNotification.cancelLocalNotifications({ id });
-  }
 
   saveEditMemo = value => {
     const { id } = this.props.currentMemo;
@@ -145,10 +119,8 @@ class AddMemo extends Component {
         : this.state.reminders;
     this.props.editMemo(value, id, reminders, lastModified);
     this.props.getCurrentMemo(id);
-
     this.scheduleNotif(reminders, id, value, this.props.currentCompany);
-
-    this.resetStack(this.props.currentMemo, this.props.currentCompany);
+    this.resetStack(this.props.currentCompany);
   };
 
   deleteCurrentMemo = () => {
@@ -160,7 +132,7 @@ class AddMemo extends Component {
           text: 'Yes',
           onPress: () => {
             this.props.deleteMemo(this.props.currentMemo);
-            this.resetStackAfterDeletion(this.props.currentCompany);
+            this.resetStack(this.props.currentCompany);
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
@@ -169,7 +141,7 @@ class AddMemo extends Component {
     );
   };
 
-  resetStackAfterDeletion = currentCompany => {
+  resetStack = currentCompany => {
     this.props.navigation.dispatch(
       StackActions.reset({
         index: 1,
@@ -181,7 +153,8 @@ class AddMemo extends Component {
             routeName: 'ViewCompany',
             params: {
               title: currentCompany.name,
-              companyID: currentCompany.id
+              companyID: currentCompany.id,
+              type: 'fromEditScreen'
             }
           })
         ]
@@ -269,7 +242,7 @@ class AddMemo extends Component {
                       mode="datetime"
                       androidMode="spinner"
                       placeholder="M/DD/YYYY HH:mm"
-                      format="M/DD/YYYY HH:mm"
+                      format="M/DD/YYYY HH:mm:ss"
                       minDate="1-01-1920"
                       confirmBtnText="Confirm"
                       cancelBtnText="Cancel"
@@ -295,7 +268,7 @@ class AddMemo extends Component {
                 {this.state.reminders.length <= 4 &&
                 this.state.reminders[this.state.reminders.length - 1] !== '' ? (
                   <View style={styles.addReminderContainer}>
-                    <Text style={styles.addTextStyle}>add reminder</Text>
+                    <Text style={styles.addTextStyle}>Add reminder</Text>
                     <Icon
                       name="plus-circle"
                       type="feather"

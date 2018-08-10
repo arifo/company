@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Dimensions, ActivityIndicator, Modal } from 'react-native';
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
+
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -20,6 +21,7 @@ import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 import AddImageBox from '../../components/AddImageBox';
 import CustomFlatList from '../../components/CustomFlatList';
+import ImagePreview from '../../components/ImagePreview';
 
 const deviceHeight = Dimensions.get('screen').height;
 const deviceWidth = Dimensions.get('screen').width;
@@ -29,11 +31,16 @@ class ViewCompany extends Component {
     index: 0,
     isTabOneShowing: true,
     enableScrollViewScroll: true,
-    sortKey: 'desc'
+    sortKey: 'desc',
+    visible: false,
+    selectedItem: ''
   };
 
   componentDidMount() {
-    const { companyID } = this.props.navigation.state.params;
+    const { companyID, type } = this.props.navigation.state.params;
+    if (type === 'fromEditScreen') {
+      this.handleTabSwitch(1);
+    }
     this.props.getCurrentCompany(companyID);
     this.props.getEmployees(companyID);
     this.props.getMemos(companyID);
@@ -78,9 +85,11 @@ class ViewCompany extends Component {
     this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
   }
 
+  showModal = avatar => {
+    this.setState({ visible: true, selectedItem: avatar });
+  };
   renderEmployeeTab() {
     const data = this.props.employees;
-
     return (
       <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
         <View
@@ -90,7 +99,18 @@ class ViewCompany extends Component {
           }}
         >
           {data.length > 0 ? (
-            <CustomFlatList data={data} onPress={this.onEmployeeSelect} />
+            <View>
+              <CustomFlatList
+                data={data}
+                onPress={this.onEmployeeSelect}
+                avatarPress={avatar => this.showModal(avatar)}
+              />
+              <ImagePreview
+                visible={this.state.visible}
+                source={{ uri: this.state.selectedItem }}
+                close={() => this.setState({ visible: false, selectedItem: '' })}
+              />
+            </View>
           ) : (
             <AddImageBox
               size={0.45}
@@ -112,9 +132,8 @@ class ViewCompany extends Component {
   }
 
   renderMemoTab() {
-    const data = _
-      .chain(this.props.memos)
-      .orderBy(['createdAt'], [this.state.sortKey])
+    const data = _.chain(this.props.memos)
+      .orderBy(['lastModified', 'createdAt'], [this.state.sortKey])
       .value();
     return (
       <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
@@ -194,7 +213,7 @@ class ViewCompany extends Component {
       createdAt,
       lastModified
     } = this.props.currentCompany;
-
+    console.log('tab', this.state.index, this.state.isTabOneShowing);
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -206,8 +225,8 @@ class ViewCompany extends Component {
           contentContainerStyle={{ paddingBottom: 40, width: deviceWidth }}
           scrollEnabled={this.state.enableScrollViewScroll}
         >
-          <CustomCard textStyle={{ fontSize: 20, fontWeight: '500' }} text={name} />
-          <CustomCard>
+          <CustomCard label="Name" textStyle={{ fontSize: 20, fontWeight: '500' }} text={name} />
+          <CustomCard label="Description">
             <ViewMoreText
               numberOfLines={5}
               renderViewMore={this.renderViewMore}

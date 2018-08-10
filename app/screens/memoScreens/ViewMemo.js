@@ -93,11 +93,12 @@ class ViewMemo extends Component {
                   key={key}
                   style={
                     moment() < moment(val, 'M/DD/YYYY HH:mm')
-                      ? { fontSize: 14, fontWeight: '700', color: 'green' }
-                      : { fontSize: 14, fontWeight: '700', color: 'red' }
+                      ? { fontSize: 12, fontWeight: '700', color: 'green' }
+                      : { fontSize: 12, fontWeight: '700', color: 'red' }
                   }
                 >
-                  {key + 1}. {moment().to(moment(val, 'M/DD/YYYY HH:mm'))}
+                  {key + 1}. {moment().to(moment(val, 'M/DD/YYYY HH:mm'))} {'  '}
+                  ({val})
                 </Text>
               ))
             ) : (

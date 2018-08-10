@@ -1,18 +1,28 @@
 import React, { Component } from 'react';
-import { Text, Rating, Avatar } from 'react-native-elements';
-import { ScrollView, View, Image, ActivityIndicator } from 'react-native';
-import moment from 'moment';
 import { connect } from 'react-redux';
+import { ScrollView, View, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Text, Rating, Avatar } from 'react-native-elements';
+import Communications from 'react-native-communications';
+
+import moment from 'moment';
 
 import { getCurrentEmployee } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
+import ImagePreview from '../../components/ImagePreview';
 
 class ViewEmployee extends Component {
+  state = {
+    visible: false
+  };
   componentDidMount() {
     const { employeeID } = this.props.navigation.state.params;
     this.props.getCurrentEmployee(employeeID);
   }
+
+  handlePhonePress() {}
+
+  handleEmailPress() {}
 
   render() {
     if (this.props.isFetching) {
@@ -38,13 +48,39 @@ class ViewEmployee extends Component {
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
         <ScrollView style={{ width: '100%' }}>
           {avatar ? (
-            <Image source={{ uri: avatar }} style={styles.image} resizeMethod="resize" />
+            <View>
+              <ImagePreview
+                visible={this.state.visible}
+                source={{ uri: avatar }}
+                close={() => this.setState({ visible: false })}
+              />
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => this.setState({ visible: true })}
+              >
+                <Image source={{ uri: avatar }} style={styles.image} resizeMethod="resize" />
+              </TouchableOpacity>
+            </View>
           ) : (
             <Avatar rounded icon={styles.icon} containerStyle={styles.avatar} />
           )}
           <CustomCard label="Name" text={name} />
-          <CustomCard label="Phone number" text={phone} />
-          <CustomCard label="Email adress" text={email} />
+          <CustomCard label="Phone number">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => Communications.phonecall(phone, true)}
+            >
+              <Text style={{ fontWeight: '400', color: 'blue' }}>{phone}</Text>
+            </TouchableOpacity>
+          </CustomCard>
+          <CustomCard label="Email adress">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => Communications.email([email], null, null, null, null)}
+            >
+              <Text style={{ fontWeight: '400', color: 'blue' }}>{email}</Text>
+            </TouchableOpacity>
+          </CustomCard>
           <CustomCard label="Department" text={department} />
           <CustomCard
             label="Join date"

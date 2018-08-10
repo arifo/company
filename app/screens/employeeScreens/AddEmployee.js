@@ -73,48 +73,25 @@ class AddEmployee extends Component {
         lastModified: ''
       };
       this.props.addEmployee(employeeInfo, uuid);
-      this.resetStack(employeeInfo, this.props.currentCompany);
+      this.props.navigation.replace('ViewEmployee', {
+        title: employeeInfo.name,
+        employeeID: employeeInfo.id
+      });
     });
   };
 
   saveEditEmployee = value => {
-    const { currentEmployee, currentCompany } = this.props;
+    const { currentEmployee } = this.props;
     const { avatar, rating } = this.state;
     const { id } = currentEmployee;
     this.props.toggleEmployeeFetching(true);
     const lastModified = moment().valueOf();
     this.props.editEmployee(value, id, lastModified, avatar, rating);
     this.props.getCurrentEmployee(id);
-    this.resetStack(currentEmployee, currentCompany);
+    this.resetStack(this.props.currentCompany);
   };
 
-  resetStack = (item, currentCompany) => {
-    this.props.navigation.dispatch(
-      StackActions.reset({
-        index: 2,
-        actions: [
-          NavigationActions.navigate({
-            routeName: 'Companies'
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewCompany',
-            params: {
-              title: currentCompany.name,
-              companyID: currentCompany.id
-            }
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewEmployee',
-            params: {
-              title: `${item.name}`,
-              employeeID: item.id
-            }
-          })
-        ]
-      })
-    );
-  };
-  resetStackAfterDeletion = currentCompany => {
+  resetStack = currentCompany => {
     this.props.navigation.dispatch(
       StackActions.reset({
         index: 1,
@@ -146,7 +123,7 @@ class AddEmployee extends Component {
             const { currentCompany } = this.props;
             this.props.deleteEmployee(currentEmployee);
             this.props.deleteAvatarFromStorage(this.state.avatar);
-            this.resetStackAfterDeletion(currentCompany);
+            this.resetStack(currentCompany);
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
@@ -156,10 +133,10 @@ class AddEmployee extends Component {
   };
 
   selectAvatarImg = () => {
-    this.setState({ imageUploading: true });
-
     const { currentCompany } = this.props;
     const { currentEmployee } = this.props;
+
+    this.setState({ imageUploading: true });
     this.props.uploadImagesToFirebaseStorage(this, currentCompany.id, currentEmployee.id);
   };
 
@@ -229,7 +206,15 @@ class AddEmployee extends Component {
               joinDate: Yup.string().notRequired(),
               rating: Yup.number().notRequired()
             })}
-            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
+            render={({
+              values,
+              handleSubmit,
+              setFieldValue,
+              errors,
+              touched,
+              isSubmitting,
+              setFieldTouched
+            }) => (
               <Card containerStyle={{ width: '92%', marginBottom: 20 }}>
                 {this.renderAvatar()}
 
@@ -341,7 +326,8 @@ class AddEmployee extends Component {
                   title="Save"
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
                   onPress={handleSubmit}
-                  disabled={this.state.imageUploading}
+                  loading={isSubmitting}
+                  disabled={this.state.imageUploading || isSubmitting}
                 />
                 {type === 'edit' ? (
                   <Button
