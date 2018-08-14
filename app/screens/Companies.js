@@ -47,12 +47,13 @@ class Companies extends Component {
     this.props.getMemos();
 
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (this.state.searchFocused) {
-        this.search.blur();
-        this.setState({ value: '' });
-        return true;
+      if (!this.state.searchFocused) {
+        return false;
       }
-      return false;
+      
+      this.search.blur();
+      this.setState({ value: '' });
+      return true;
     });
   }
 

@@ -10,43 +10,46 @@ import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
 class ViewMemo extends Component {
-  renderViewMore(onPress) {
-    return (
-      <View
-        style={{
-          height: 25,
-          marginTop: 5,
-          backgroundColor: '#e2e2e2',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <Text onPress={onPress} style={{ fontWeight: '500' }}>
-          View more
-        </Text>
-      </View>
-    );
-  }
-  renderViewLess(onPress) {
-    return (
-      <View
-        style={{
-          height: 25,
-          marginTop: 5,
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <Text onPress={onPress} style={{ fontWeight: '500' }}>
-          View less
-        </Text>
-      </View>
-    );
-  }
-
   handlePhone = phone => Communications.phonecall(phone, true);
 
   handleEmail = email => Communications.email([email], null, null, null, null);
+
+  renderReminder = (reminder, key) => {
+    const isDue = { color: moment() < moment(reminder) ? 'green' : 'red' };
+    const formatedDate = moment(reminder).format('M/DD/YYYY HH:mm');
+    const timeAgo = moment().to(moment(reminder));
+    const text = `${timeAgo}  (${formatedDate})`;
+    return (
+      <Text key={key} style={{ fontWeight: '700' }}>
+        {`${key + 1}. `}
+        <Text style={isDue}>{text}</Text>
+      </Text>
+    );
+  };
+
+  renderContact = contact => {
+    if (!contact) {
+      return null;
+    }
+    const contactStyle = { fontWeight: '400', color: 'blue' };
+    return (
+      <CustomCard label="Contact">
+        <Text>name: {contact.name}</Text>
+        <Text>
+          phone:{' '}
+          <Text style={contactStyle} onPress={() => this.handlePhone(contact.phone)}>
+            {contact.phone}
+          </Text>
+        </Text>
+        <Text>
+          email:{' '}
+          <Text style={contactStyle} onPress={() => this.handleEmail(contact.email)}>
+            {contact.email}
+          </Text>
+        </Text>
+      </CustomCard>
+    );
+  };
 
   render() {
     const { memoID } = this.props.navigation.state.params;
@@ -62,69 +65,50 @@ class ViewMemo extends Component {
           <CustomCard label="Note">
             <ViewMoreText
               numberOfLines={5}
-              renderViewMore={this.renderViewMore}
-              renderViewLess={this.renderViewLess}
+              renderViewMore={onPress => <ViewText onPress={onPress} text="View more" />}
+              renderViewLess={onPress => <ViewText onPress={onPress} text="View less" />}
               textStyle={{ textAlign: 'justify' }}
             >
               <Text>{note}</Text>
             </ViewMoreText>
           </CustomCard>
-          {_.isEmpty(selectedContact) ? null : (
-            <CustomCard label="Contact">
-              <Text>name: {selectedContact[0].name}</Text>
-              <Text>
-                phone:{' '}
-                <Text
-                  style={{ fontWeight: '400', color: 'blue' }}
-                  onPress={() => this.handlePhone(selectedContact[0].phone)}
-                >
-                  {selectedContact[0].phone}
-                </Text>
-              </Text>
-              <Text>
-                email:{' '}
-                <Text
-                  style={{ fontWeight: '400', color: 'blue' }}
-                  onPress={() => this.handleEmail(selectedContact[0].email)}
-                >
-                  {selectedContact[0].email}
-                </Text>
-              </Text>
-            </CustomCard>
-          )}
+
+          {this.renderContact(selectedContact[0])}
 
           <CustomCard label="Reminders">
-            {reminders.length > 0 ? (
-              reminders.map((val, key) => (
-                <Text
-                  key={key}
-                  style={
-                    moment() < moment(val)
-                      ? { fontWeight: '700', color: 'green' }
-                      : { fontWeight: '700', color: 'red' }
-                  }
-                >
-                  {key + 1}. {moment().to(moment(val))} {'  '}(
-                  {moment(val).format('M/DD/YYYY HH:mm')})
-                </Text>
-              ))
-            ) : (
-              <Text>reminders are not set...</Text>
-            )}
+            {reminders.map(this.renderReminder)}
+            {reminders.length === 0 && <Text>reminders are not set...</Text>}
           </CustomCard>
           <CustomCard label="Created">
             <Text>{moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}</Text>
           </CustomCard>
-          {lastModified ? (
-            <CustomCard label="Last modified">
-              <Text>{moment(lastModified).fromNow()}</Text>
-            </CustomCard>
-          ) : null}
+          {lastModified > 0 && <LastModified lastModified={lastModified} />}
         </ScrollView>
       </Container>
     );
   }
 }
+
+const LastModified = ({ lastModified }) => (
+  <CustomCard label="Last modified">
+    <Text>{moment(lastModified).fromNow()}</Text>
+  </CustomCard>
+);
+
+const ViewText = ({ onPress, text }) => (
+  <View
+    style={{
+      height: 25,
+      marginTop: 5,
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}
+  >
+    <Text onPress={onPress} style={{ fontWeight: '500' }}>
+      {text}
+    </Text>
+  </View>
+);
 
 const mapStateToProps = state => ({
   memo: state.memo.memos,

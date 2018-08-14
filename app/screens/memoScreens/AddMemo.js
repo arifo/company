@@ -24,7 +24,7 @@ class AddMemo extends Component {
       textInputValue: '',
       reminders: [],
       notificationsToDelete: ['', '', '', '', ''],
-      isDateTimePickerVisible: false
+      isDateTimePickerVisible: { show: false, key: 0 }
     };
     this.noteTextInput = null;
   }
@@ -139,223 +139,184 @@ class AddMemo extends Component {
     );
   };
 
-  showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
+  showDateTimePicker = key => this.setState({ isDateTimePickerVisible: { show: true, key } });
 
-  hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
+  hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: { show: false, key: 0 } });
 
-  renderDate = key => moment(`${this.state.reminders[key]}`).format('M/DD/YYYY HH:mm');
+  formatDate = reminder => moment(`${reminder}`).format('M/DD/YYYY HH:mm');
+
+  canAddReminder = () =>
+    this.state.reminders.length <= 4 &&
+    this.state.reminders[this.state.reminders.length - 1] !== '';
+  handleAddReminder = () => {
+    const newArray = this.state.reminders;
+    newArray.push('');
+    this.setState({ reminders: newArray });
+  };
+  renderReminder = (reminder, key) => (
+    <View key={key} style={styles.newReminderContainer}>
+      <View style={{ flex: 1 }}>
+        <TouchableOpacity onPress={() => this.showDateTimePicker(key)} style={styles.reminder}>
+          <View style={styles.reminderText}>
+            <Text>{reminder ? this.formatDate(reminder) : 'M/DD/YYYY HH:mm'}</Text>
+          </View>
+          <Icon name="calendar" type="font-awesome" size={32} color={'#008fff'} />
+        </TouchableOpacity>
+      </View>
+      <Icon
+        name="minus"
+        type="simple-line-icon"
+        size={28}
+        color={'#b7bbbf'}
+        onPress={() => {
+          const newArray = this.state.reminders;
+          newArray.splice(key, 1);
+          this.setState({ reminders: newArray });
+        }}
+      />
+    </View>
+  );
+
+  renderFormik = ({
+    values,
+    handleSubmit,
+    setFieldValue,
+    errors,
+    touched,
+    setFieldTouched,
+    isSubmitting
+  }) => {
+    const { type, companyID } = this.props.navigation.state.params;
+    let data = this.props.employees;
+    data = _.pickBy(data, val => val.companyID === companyID);
+    data = _.map(data, val => val);
+    return (
+      <Card containerStyle={{ width: '92%' }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 15 }}>
+          <ModalSelector
+            style={{ flex: 1 }}
+            keyExtractor={employee => `${employee.id}`}
+            labelExtractor={employee => `${employee.name}`}
+            data={data}
+            initValue={_.isEmpty(values.contact) ? 'Select contact' : `${values.contact.name}`}
+            onChange={select => setFieldValue('contact', Object.assign({}, select))}
+          />
+          {!_.isEmpty(values.contact) && (
+            <IconButton onPress={() => setFieldValue('contact', '')} />
+          )}
+        </View>
+
+        <InputForm
+          label="Memo"
+          placeholder="memo title..."
+          returnKeyType={'next'}
+          onSubmitEditing={() => this.noteTextInput.focus()}
+          value={values.title}
+          onChange={setFieldValue}
+          onTouch={setFieldTouched}
+          name="title"
+          error={touched.title && errors.title}
+        />
+        <InputForm
+          label="Note"
+          placeholder="note ..."
+          multiline
+          inputRef={i => (this.noteTextInput = i)}
+          returnKeyType={'done'}
+          value={values.note}
+          onChange={setFieldValue}
+          onTouch={setFieldTouched}
+          name="note"
+          error={touched.note && errors.note}
+        />
+        <FormLabel>Remider</FormLabel>
+        {this.state.reminders.map((reminder, key) => this.renderReminder(reminder, key))}
+        <DateTimePicker
+          isVisible={this.state.isDateTimePickerVisible.show}
+          mode="datetime"
+          onCancel={this.hideDateTimePicker}
+          onConfirm={date => {
+            const newArray = this.state.reminders;
+            newArray[this.state.isDateTimePickerVisible.key] = date.toISOString();
+            this.setState({ reminders: newArray });
+
+            this.hideDateTimePicker();
+          }}
+        />
+        {this.canAddReminder() && (
+          <View style={styles.addReminderContainer}>
+            <Text onPress={this.handleAddReminder} style={styles.addTextStyle}>
+              Add reminder
+            </Text>
+            <IconButton name={'plus'} onPress={this.handleAddReminder} />
+          </View>
+        )}
+        {this.state.reminders.length > 1 && (
+          <View style={[styles.addReminderContainer, { paddingVertical: 15 }]}>
+            <Text
+              onPress={() => {
+                this.setState({ reminders: [] });
+              }}
+              style={[styles.addTextStyle, { color: 'red' }]}
+            >
+              Delete all reminders
+            </Text>
+            <Icon name="close" type="simple-line-icon" size={28} color={'red'} />
+          </View>
+        )}
+
+        <Button
+          title="Save Memo"
+          buttonStyle={styles.button}
+          onPress={handleSubmit}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        />
+        {type === 'edit' && (
+          <Button
+            title="Delete"
+            buttonStyle={{ backgroundColor: 'red', marginTop: 10 }}
+            onPress={this.deleteCurrentMemo}
+          />
+        )}
+      </Card>
+    );
+  };
 
   render() {
-    const { type, memoID, companyID } = this.props.navigation.state.params;
-    let data = this.props.employees;
-    data = _.pickBy(data, (val, key) => val.companyID === companyID);
-    data = _.map(data, (val, key) => val);
+    const { memoID } = this.props.navigation.state.params;
 
     return (
       <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
-            initialValues={
-              type === 'edit' && this.props.memo[memoID]
-                ? {
-                    title: this.props.memo[memoID].title,
-                    note: this.props.memo[memoID].note,
-                    contact: this.props.memo[memoID].contact
-                  }
-                : {
-                    title: '',
-                    note: '',
-                    contact: {}
-                  }
-            }
+            initialValues={Object.assign(
+              { title: '', note: '', contact: {} },
+              this.props.memo[memoID]
+            )}
             onSubmit={this.onSave}
             validationSchema={Yup.object().shape({
               title: Yup.string().required(),
               note: Yup.string().required()
             })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isSubmitting
-            }) => (
-              <Card containerStyle={{ width: '92%' }}>
-                <View style={{ flexDirection: 'row', paddingHorizontal: 15 }}>
-                  <ModalSelector
-                    style={{ flex: 1 }}
-                    keyExtractor={employee => `${employee.id}`}
-                    labelExtractor={employee => `${employee.name}`}
-                    data={data}
-                    initValue={
-                      _.isEmpty(values.contact) ? 'Select contact' : `${values.contact.name}`
-                    }
-                    onChange={select => {
-                      const info = {
-                        id: select.id,
-                        name: select.name,
-                        phone: select.phone,
-                        email: select.email,
-                        avatar: select.avatar
-                      };
-                      setFieldValue('contact', info);
-                    }}
-                  />
-                  {values.contact ? (
-                    <Icon
-                      containerStyle={{ marginLeft: 10 }}
-                      name="minus"
-                      type="simple-line-icon"
-                      size={28}
-                      color={'#b7bbbf'}
-                      onPress={() => setFieldValue('contact', '')}
-                    />
-                  ) : null}
-                </View>
-
-                <InputForm
-                  label="Memo"
-                  placeholder="memo title..."
-                  returnKeyType={'next'}
-                  onSubmitEditing={() => this.noteTextInput.focus()}
-                  value={values.title}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="title"
-                  error={touched.title && errors.title}
-                />
-                <InputForm
-                  label="Note"
-                  placeholder="note ..."
-                  multiline
-                  inputRef={input => {
-                    this.noteTextInput = input;
-                  }}
-                  returnKeyType={'done'}
-                  value={values.note}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="note"
-                  error={touched.note && errors.note}
-                />
-                <FormLabel>Remider</FormLabel>
-                {this.state.reminders.map((v, key) => (
-                  <View key={key} style={styles.newReminderContainer}>
-                    <View style={{ flex: 1 }}>
-                      <TouchableOpacity
-                        onPress={this.showDateTimePicker}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          paddingRight: 12
-                        }}
-                      >
-                        <View
-                          style={{
-                            marginRight: 8,
-                            borderBottomWidth: 1,
-                            borderBottomColor: 'rgba(0,0,0,.1)'
-                          }}
-                        >
-                          {this.state.reminders[key] ? (
-                            <Text>{this.renderDate(key)}</Text>
-                          ) : (
-                            <Text>M/DD/YYYY HH:mm</Text>
-                          )}
-                        </View>
-                        <Icon name="calendar" type="font-awesome" size={32} color={'#008fff'} />
-                      </TouchableOpacity>
-                      <DateTimePicker
-                        isVisible={this.state.isDateTimePickerVisible}
-                        mode="datetime"
-                        onCancel={this.hideDateTimePicker}
-                        onConfirm={date => {
-                          const newArray = this.state.reminders;
-                          newArray[key] = date.toISOString();
-                          this.setState({ reminders: newArray });
-
-                          this.hideDateTimePicker();
-                        }}
-                      />
-                    </View>
-                    <Icon
-                      name="minus"
-                      type="simple-line-icon"
-                      size={28}
-                      color={'#b7bbbf'}
-                      onPress={() => {
-                        const newArray = this.state.reminders;
-                        newArray.splice(key, 1);
-                        this.setState({ reminders: newArray });
-                      }}
-                    />
-                  </View>
-                ))}
-                {this.state.reminders.length <= 4 &&
-                this.state.reminders[this.state.reminders.length - 1] !== '' ? (
-                  <View style={styles.addReminderContainer}>
-                    <Text
-                      onPress={() => {
-                        const newArray = this.state.reminders;
-                        newArray.push('');
-                        this.setState({ reminders: newArray });
-                      }}
-                      style={styles.addTextStyle}
-                    >
-                      Add reminder
-                    </Text>
-                    <Icon
-                      name="plus"
-                      type="simple-line-icon"
-                      size={28}
-                      color={'#b7bbbf'}
-                      onPress={() => {
-                        const newArray = this.state.reminders;
-                        newArray.push('');
-                        this.setState({ reminders: newArray });
-                      }}
-                    />
-                  </View>
-                ) : null}
-                {this.state.reminders.length > 1 ? (
-                  <View style={[styles.addReminderContainer, { paddingVertical: 15 }]}>
-                    <Text
-                      onPress={() => {
-                        this.setState({ reminders: [] });
-                      }}
-                      style={[styles.addTextStyle, { color: 'red' }]}
-                    >
-                      Delete all reminders
-                    </Text>
-                    <Icon name="close" type="simple-line-icon" size={28} color={'red'} />
-                  </View>
-                ) : null}
-
-                <Button
-                  title="Save Memo"
-                  buttonStyle={styles.button}
-                  onPress={handleSubmit}
-                  loading={isSubmitting}
-                  disabled={isSubmitting}
-                />
-                {type === 'edit' ? (
-                  <Button
-                    title="Delete"
-                    buttonStyle={{ backgroundColor: 'red', marginTop: 10 }}
-                    onPress={this.deleteCurrentMemo}
-                  />
-                ) : null}
-              </Card>
-            )}
+            render={this.renderFormik}
           />
         </ScrollView>
       </Container>
     );
   }
 }
+
+const IconButton = ({ onPress, name = 'minus' }) => (
+  <Icon
+    containerStyle={{ marginLeft: 10 }}
+    name={name}
+    type="simple-line-icon"
+    size={28}
+    color={'#b7bbbf'}
+    onPress={() => onPress()}
+  />
+);
 
 const mapStateToProps = state => ({
   memo: state.memo.memos,
@@ -398,5 +359,16 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     backgroundColor: '#0082C0',
     marginTop: 40
+  },
+  reminder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingRight: 12
+  },
+  reminderText: {
+    marginRight: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,.1)'
   }
 });
