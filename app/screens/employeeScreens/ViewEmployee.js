@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ScrollView, View, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Image, TouchableOpacity } from 'react-native';
 import { Text, Rating, Avatar } from 'react-native-elements';
 import Communications from 'react-native-communications';
 
@@ -15,23 +15,10 @@ class ViewEmployee extends Component {
   state = {
     visible: false
   };
-  componentDidMount() {
-    const { employeeID } = this.props.navigation.state.params;
-    this.props.getCurrentEmployee(employeeID);
-  }
-
-  handlePhonePress() {}
-
-  handleEmailPress() {}
+  componentDidMount() {}
 
   render() {
-    if (this.props.isFetching) {
-      return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#0082C0" />
-        </View>
-      );
-    }
+    const { employeeID } = this.props.navigation.state.params;
     const {
       name,
       phone,
@@ -42,7 +29,7 @@ class ViewEmployee extends Component {
       createdAt,
       lastModified,
       avatar
-    } = this.props.currentEmployee;
+    } = this.props.employee[employeeID];
 
     return (
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
@@ -107,8 +94,7 @@ class ViewEmployee extends Component {
 }
 
 const mapStateToProps = state => ({
-  currentEmployee: state.employee.currentEmployee,
-  isFetching: state.employee.isFetching
+  employee: state.employee.employees
 });
 
 export default connect(

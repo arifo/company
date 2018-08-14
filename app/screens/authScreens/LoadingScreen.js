@@ -3,14 +3,8 @@ import { connect } from 'react-redux';
 import { ActivityIndicator, PlatformIOS, Alert } from 'react-native';
 import firebase from 'firebase';
 import NotifService from '../memoScreens/notification/NotifService';
-import { NavigationActions, StackActions } from 'react-navigation';
 
-import {
-  loginAction,
-  alreadyLoggedIn,
-  toggleMemoFetching,
-  toggleCompanyFetching
-} from '../../redux/actions';
+import { loginAction, alreadyLoggedIn, getNotificationMemo } from '../../redux/actions';
 import Container from '../../components/Container';
 
 class LoadingScreen extends Component {
@@ -21,7 +15,14 @@ class LoadingScreen extends Component {
   }
 
   componentDidMount() {
-    this.getUserSession();
+    const { navigation } = this.props;
+    this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.props.alreadyLoggedIn(navigation);
+        return;
+      }
+      this.props.navigation.navigate('Auth');
+    });
   }
 
   componentWillUnmount() {
@@ -30,73 +31,19 @@ class LoadingScreen extends Component {
     }
   }
 
-  getUserSession = () => {
+  onNotif(notif) {
     const { navigation } = this.props;
-    this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        console.log('user true');
-        this.props.alreadyLoggedIn(navigation);
-        return;
-      }
-      console.log('user false');
-      this.props.navigation.navigate('Auth');
-    });
-  };
+    this.props.getNotificationMemo(notif.group, notif.tag, notif, navigation);
+  }
 
   onRegister(token) {
     Alert.alert('Registered !', JSON.stringify(token));
-    console.log(token);
     this.setState({ registerToken: token.token, gcmRegistered: true });
-  }
-
-  onNotif(notif) {
-    console.log(notif);
-    const { navigation } = this.props;
-    this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        console.log('user check onNotif true');
-        this.props.alreadyLoggedIn(navigation);
-        this.props.toggleCompanyFetching(true);
-        this.props.toggleMemoFetching(true);
-        this.resetStack(notif);
-        this.notif.cancelNotif(notif.id);
-        return;
-      }
-      console.log('user check onNotif false');
-      this.props.navigation.navigate('Auth');
-    });
   }
 
   handlePerm(perms) {
     Alert.alert('Permissions', JSON.stringify(perms));
   }
-
-  resetStack = notif => {
-    this.props.navigation.dispatch(
-      StackActions.reset({
-        index: 2,
-        actions: [
-          NavigationActions.navigate({
-            routeName: 'Companies'
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewCompany',
-            params: {
-              title: notif.title,
-              companyID: notif.group
-            }
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewMemo',
-            params: {
-              title: notif.message,
-              memoID: notif.tag
-            }
-          })
-        ]
-      })
-    );
-  };
 
   render() {
     return (
@@ -113,5 +60,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { loginAction, alreadyLoggedIn, toggleMemoFetching, toggleCompanyFetching }
+  { loginAction, alreadyLoggedIn, getNotificationMemo }
 )(LoadingScreen);

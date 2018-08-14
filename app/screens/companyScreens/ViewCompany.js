@@ -1,20 +1,18 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Dimensions, ActivityIndicator, Modal } from 'react-native';
+import { View, ScrollView, Dimensions } from 'react-native';
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
+import _ from 'lodash';
+import moment from 'moment';
 import SegmentControl from 'react-native-segment-controller';
 import ViewMoreText from 'react-native-view-more-text';
-
-import moment from 'moment';
-import _ from 'lodash';
 
 import {
   getEmployees,
   getMemos,
   getCurrentCompany,
   toggleMemoFetching,
-  toggleEmployeeFetching,
-  unsubscribe
+  toggleEmployeeFetching
 } from '../../redux/actions';
 
 import Container from '../../components/Container';
@@ -37,47 +35,43 @@ class ViewCompany extends Component {
   };
 
   componentDidMount() {
-    const { companyID, type } = this.props.navigation.state.params;
+    const { type } = this.props.navigation.state.params;
     if (type === 'fromEditScreen') {
       this.handleTabSwitch(1);
     }
-    this.props.getCurrentCompany(companyID);
-    this.props.getEmployees(companyID);
-    this.props.getMemos(companyID);
-  }
-
-  componentWillUnmount() {
-    this.props.unsubscribe('employee');
-    this.props.unsubscribe('memo');
   }
 
   onEmployeeSelect = item => {
-    this.props.toggleEmployeeFetching(true);
+    const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('ViewEmployee', {
       title: item.name,
-      employeeID: item.id
+      employeeID: item.id,
+      companyID
     });
   };
 
   onAddEmployee = () => {
-    this.props.toggleEmployeeFetching(true);
+    const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('AddEmployee', {
-      title: 'New employee'
+      title: 'New employee',
+      companyID
     });
   };
 
   onMemoSelect = item => {
-    this.props.toggleMemoFetching(true);
+    const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('ViewMemo', {
       title: `${item.title}`,
-      memoID: item.id
+      memoID: item.id,
+      companyID
     });
   };
 
   onAddMemo = () => {
-    this.props.toggleMemoFetching(true);
+    const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('AddMemo', {
-      title: 'New memo'
+      title: 'New memo',
+      companyID
     });
   };
 
@@ -89,7 +83,10 @@ class ViewCompany extends Component {
     this.setState({ visible: true, selectedItem: avatar });
   };
   renderEmployeeTab() {
-    const data = this.props.employees;
+    const { companyID } = this.props.navigation.state.params;
+    let data = this.props.employees;
+    data = _.pickBy(data, (val, key) => val.companyID === companyID);
+    data = _.map(data, (val, key) => val);
     return (
       <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
         <View
@@ -132,7 +129,10 @@ class ViewCompany extends Component {
   }
 
   renderMemoTab() {
+    const { companyID } = this.props.navigation.state.params;
     const data = _.chain(this.props.memos)
+      .pickBy((val, key) => val.companyID === companyID)
+      .map((val, key) => val)
       .orderBy(['lastModified', 'createdAt'], [this.state.sortKey])
       .value();
     return (
@@ -199,21 +199,8 @@ class ViewCompany extends Component {
   }
 
   render() {
-    if (this.props.isFetching) {
-      return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#0082C0" />
-        </View>
-      );
-    }
-    const {
-      name,
-      description,
-
-      createdAt,
-      lastModified
-    } = this.props.currentCompany;
-    console.log('tab', this.state.index, this.state.isTabOneShowing);
+    const { companyID } = this.props.navigation.state.params;
+    const { name, description, createdAt, lastModified } = this.props.companies[companyID];
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -279,8 +266,6 @@ class ViewCompany extends Component {
 
 const mapStateToProps = state => ({
   companies: state.company.companies,
-  isFetching: state.company.isFetching,
-  currentCompany: state.company.currentCompany,
   employees: state.employee.employees,
   memos: state.memo.memos
 });
@@ -292,8 +277,7 @@ export default connect(
     getMemos,
     getCurrentCompany,
     toggleMemoFetching,
-    toggleEmployeeFetching,
-    unsubscribe
+    toggleEmployeeFetching
   }
 )(ViewCompany);
 

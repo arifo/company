@@ -1,30 +1,22 @@
 import React, { Component } from 'react';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
-import { ScrollView, View, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Alert, Image, TouchableOpacity } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import DatePicker from 'react-native-datepicker';
 import moment from 'moment';
 import Slider from 'react-native-slider';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import firebase from 'firebase';
 
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
-import { NavigationActions, StackActions } from 'react-navigation';
+import { StackActions } from 'react-navigation';
 
-import {
-  addEmployee,
-  editEmployee,
-  deleteEmployee,
-  toggleEmployeeFetching,
-  getCurrentEmployee,
-  uploadImagesToFirebaseStorage,
-  deleteAvatarFromStorage
-} from '../../redux/actions';
-
-import Container from '../../components/Container';
-import InputForm from '../../components/InputForm';
-import AddImageBox from '../../components/AddImageBox';
+import * as actions from '../../../redux/actions';
+import styles from './styles';
+import Container from '../../../components/Container';
+import InputForm from '../../../components/InputForm';
+import AddImageBox from '../../../components/AddImageBox';
 
 class AddEmployee extends Component {
   constructor(props) {
@@ -42,11 +34,12 @@ class AddEmployee extends Component {
   }
 
   componentDidMount() {
-    const { type } = this.props.navigation.state.params;
-    const { avatar, rating } = this.props.currentEmployee;
-
-    if (this.props.currentEmployee.avatar) {
-      this.setState({ avatar, imageSelected: true, rating });
+    const { type, employeeID } = this.props.navigation.state.params;
+    if (type === 'edit') {
+      const { avatar, rating } = this.props.employee[employeeID];
+      if (avatar) {
+        this.setState({ avatar, imageSelected: true, rating });
+      }
     }
     if (type !== 'edit') {
       this.setState({ avatar: '', imageSelected: false, rating: 10 });
@@ -58,12 +51,27 @@ class AddEmployee extends Component {
     return type === 'edit' ? this.saveEditEmployee(values) : this.saveNewEmployee(values);
   };
 
+  // uploadImage(){}
+  // setUserCredentials(values, state){}
+
+  // async saveUserToStore(navigation) {
+  //   try {
+  //     const imageUrl = await uploadImage(this.state.uri);
+  //     const userInfo = setUserCredentials(values, state, imageUrl);
+  // await addEmployee();
+  // fetchEnded();
+  // navigation.goBack();
+  //   } catch(e) {
+  //     console.log(e)
+  //   }
+  // }
+
   saveNewEmployee = value => {
-    const { id } = this.props.currentCompany;
+    const { companyID } = this.props.navigation.state.params;
     UUIDGenerator.getRandomUUID().then(uuid => {
       const employeeInfo = {
         id: uuid,
-        companyID: id,
+        companyID,
         name: value.name,
         phone: value.phone,
         email: value.email,
@@ -72,45 +80,19 @@ class AddEmployee extends Component {
         rating: this.state.rating,
         avatar: this.state.avatar,
         createdAt: moment().valueOf(),
-        lastModified: ''
+        lastModified: '',
+        user: firebase.auth().currentUser.uid
       };
-      this.props.addEmployee(employeeInfo, uuid);
-      this.props.navigation.replace('ViewEmployee', {
-        title: employeeInfo.name,
-        employeeID: employeeInfo.id
-      });
+      this.props.addEmployee(employeeInfo, uuid, this.props.navigation);
     });
   };
 
   saveEditEmployee = value => {
-    const { currentEmployee } = this.props;
+    const { employeeID } = this.props.navigation.state.params;
     const { avatar, rating } = this.state;
-    const { id } = currentEmployee;
-    this.props.toggleEmployeeFetching(true);
-    const lastModified = moment().valueOf();
-    this.props.editEmployee(value, id, lastModified, avatar, rating);
-    this.props.getCurrentEmployee(id);
-    this.resetStack(this.props.currentCompany);
-  };
 
-  resetStack = currentCompany => {
-    this.props.navigation.dispatch(
-      StackActions.reset({
-        index: 1,
-        actions: [
-          NavigationActions.navigate({
-            routeName: 'Companies'
-          }),
-          NavigationActions.navigate({
-            routeName: 'ViewCompany',
-            params: {
-              title: currentCompany.name,
-              companyID: currentCompany.id
-            }
-          })
-        ]
-      })
-    );
+    const lastModified = moment().valueOf();
+    this.props.editEmployee(value, employeeID, lastModified, avatar, rating, this.props.navigation);
   };
 
   deleteCurrentEmployee = () => {
@@ -121,11 +103,12 @@ class AddEmployee extends Component {
         {
           text: 'Yes',
           onPress: () => {
-            const { currentEmployee } = this.props;
-            const { currentCompany } = this.props;
-            this.props.deleteEmployee(currentEmployee);
-            this.props.deleteAvatarFromStorage(this.state.avatar);
-            this.resetStack(currentCompany);
+            const { employeeID } = this.props.navigation.state.params;
+            const employeeToDelete = this.props.employee[employeeID];
+            if (this.state.avatar) {
+              this.props.deleteAvatarFromStorage(this.state.avatar);
+            }
+            this.props.deleteEmployee(employeeToDelete, this.props.navigation);
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
@@ -135,12 +118,14 @@ class AddEmployee extends Component {
   };
 
   selectAvatarImg = () => {
-    const { currentCompany } = this.props;
-    const { currentEmployee } = this.props;
-
+    const { companyID } = this.props.navigation.state.params;
     this.setState({ imageUploading: true });
-    this.props.uploadImagesToFirebaseStorage(this, currentCompany.id, currentEmployee.id);
+    this.props.uploadImagesToFirebaseStorage(this, companyID);
   };
+
+  showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
+
+  hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
 
   renderAvatar() {
     if (this.state.imageSelected) {
@@ -172,26 +157,20 @@ class AddEmployee extends Component {
     );
   }
 
-  showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
-
-  hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
-
   render() {
-    const { type } = this.props.navigation.state.params;
-    const { name, phone, email, department, joinDate } = this.props.currentEmployee;
-
+    const { type, employeeID } = this.props.navigation.state.params;
     return (
       <Container>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">
           <Formik
             initialValues={
-              type === 'edit'
+              type === 'edit' && this.props.employee[employeeID]
                 ? {
-                    name,
-                    phone,
-                    email,
-                    department,
-                    joinDate
+                    name: this.props.employee[employeeID].name,
+                    phone: this.props.employee[employeeID].phone,
+                    email: this.props.employee[employeeID].email,
+                    department: this.props.employee[employeeID].department,
+                    joinDate: this.props.employee[employeeID].joinDate
                   }
                 : {
                     name: '',
@@ -237,6 +216,7 @@ class AddEmployee extends Component {
                   name="name"
                   error={touched.name && errors.name}
                 />
+
                 <InputForm
                   label="Phone"
                   placeholder="phone number"
@@ -254,6 +234,7 @@ class AddEmployee extends Component {
                   name="phone"
                   error={touched.phone && errors.phone}
                 />
+
                 <InputForm
                   label="Email"
                   placeholder="example@example.com"
@@ -272,6 +253,7 @@ class AddEmployee extends Component {
                   name="email"
                   error={touched.email && errors.email}
                 />
+
                 <InputForm
                   label="Department"
                   placeholder="Department"
@@ -285,9 +267,9 @@ class AddEmployee extends Component {
                   name="department"
                   error={touched.department && errors.department}
                 />
+
                 <View style={styles.joinDateContainer}>
                   <FormLabel>Join date</FormLabel>
-
                   <View style={styles.datePickerContainer}>
                     <TouchableOpacity
                       onPress={this.showDateTimePicker}
@@ -318,7 +300,6 @@ class AddEmployee extends Component {
                       mode="date"
                       onCancel={this.hideDateTimePicker}
                       onConfirm={date => {
-                        console.log('A date has been picked: ', date);
                         const d = date.toISOString();
                         setFieldValue('joinDate', d);
                         this.hideDateTimePicker();
@@ -326,6 +307,7 @@ class AddEmployee extends Component {
                     />
                   </View>
                 </View>
+
                 <View style={styles.ratingContainer}>
                   <FormLabel>Rating</FormLabel>
                   <Text style={{ fontSize: 18, fontWeight: '500' }}>{this.state.rating}</Text>
@@ -342,6 +324,7 @@ class AddEmployee extends Component {
                     step={5}
                   />
                 </View>
+
                 <Button
                   title="Save"
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
@@ -349,10 +332,11 @@ class AddEmployee extends Component {
                   loading={isSubmitting}
                   disabled={this.state.imageUploading || isSubmitting}
                 />
+
                 {type === 'edit' ? (
                   <Button
                     title="Delete"
-                    buttonStyle={{ backgroundColor: 'red', marginTop: 30 }}
+                    buttonStyle={{ backgroundColor: 'red', marginTop: 10 }}
                     onPress={this.deleteCurrentEmployee}
                   />
                 ) : null}
@@ -360,90 +344,16 @@ class AddEmployee extends Component {
             )}
           />
         </ScrollView>
-        <View style={styles.ratingSliderContainer} />
       </Container>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  currentEmployee: state.employee.currentEmployee,
-  isFetching: state.employee.isFetching,
-  currentCompany: state.company.currentCompany
+  employee: state.employee.employees
 });
 
 export default connect(
   mapStateToProps,
-  {
-    addEmployee,
-    editEmployee,
-    deleteEmployee,
-    toggleEmployeeFetching,
-    getCurrentEmployee,
-    uploadImagesToFirebaseStorage,
-    deleteAvatarFromStorage
-  }
+  actions
 )(AddEmployee);
-
-export const styles = StyleSheet.create({
-  joinDateContainer: {
-    // alignItems: 'center',
-    //flexDirection: 'row',
-    //justifyContent: 'space-between',
-    marginVertical: 8,
-    paddingRight: 10
-  },
-  datePickerContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end'
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingRight: 12
-  },
-  dateValueContainer: {
-    marginRight: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,.1)'
-  },
-  ratingContainer: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    marginVertical: 8,
-    paddingRight: 13
-  },
-  ratingSliderContainer: {
-    flex: 1,
-    alignItems: 'stretch',
-    justifyContent: 'center',
-    marginBottom: 30
-  },
-  sliderTrack: {
-    height: 4,
-    borderRadius: 2
-  },
-  sliderThumb: {
-    width: 30,
-    height: 30,
-    borderRadius: 30 / 2,
-    backgroundColor: 'white',
-    borderColor: '#30a935',
-    borderWidth: 2
-  },
-  imageContainer: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-    marginLeft: 25
-  },
-  image: {
-    alignSelf: 'center',
-    height: 128,
-    width: 128,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#b2b2b2'
-  }
-});

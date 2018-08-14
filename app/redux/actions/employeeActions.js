@@ -1,33 +1,12 @@
 import firebase from 'firebase';
 import ImagePicker from 'react-native-image-picker';
 import moment from 'moment';
+import { StackActions } from 'react-navigation';
 import { db } from '../../App';
 
-import { GET_CURRENT_EMPLOYEE, TOGGLE_EMPLOYE_FETCHING } from './types';
+import { ADD_EMPLOYEE } from './types';
 
-export const getCurrentEmployee = employeeID => (dispatch, getState) => {
-  console.log('before if in employe action....getstate', getState().employee.isFetching);
-  if (getState().employee.isFetching) {
-    console.log('if in employee action....getstate', getState().employee.isFetching);
-
-    const docRef = db.collection('employees').doc(employeeID);
-    docRef
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          console.log('Fetched document!', doc.data());
-          dispatch({ type: GET_CURRENT_EMPLOYEE, employee: doc.data(), isFetching: false });
-        } else {
-          console.log('No such document!');
-        }
-      })
-      .catch(error => {
-        console.log('Error getting document:', error);
-      });
-  }
-};
-
-export const addEmployee = (employeeInfo, uuid) => dispatch => {
+export const addEmployee = (employeeInfo, uuid, navigation) => dispatch => {
   const batch = db.batch();
 
   const addEmployeeRef = db.collection('employees').doc(uuid);
@@ -37,9 +16,15 @@ export const addEmployee = (employeeInfo, uuid) => dispatch => {
   batch.set(updateCompanyEmployeesRef, { employees: { [`${uuid}`]: true } }, { merge: true });
 
   batch.commit();
+  dispatch({ type: ADD_EMPLOYEE, payload: employeeInfo, id: uuid });
+  navigation.replace('ViewEmployee', {
+    title: employeeInfo.name,
+    employeeID: employeeInfo.id,
+    companyID: employeeInfo.companyID
+  });
 };
 
-export const deleteEmployee = employee => dispatch => {
+export const deleteEmployee = (employee, navigation) => dispatch => {
   const { id, companyID } = employee;
 
   const batch = db.batch();
@@ -50,10 +35,19 @@ export const deleteEmployee = employee => dispatch => {
   batch.update(deleteCompanyEmployeeRef, `employees.${id}`, firebase.firestore.FieldValue.delete());
 
   batch.commit();
+  navigation.goBack();
 };
 
-export const editEmployee = (values, employeeID, timestamp, avataruRi, rating) => dispatch => {
+export const editEmployee = (
+  values,
+  employeeID,
+  timestamp,
+  avataruRi,
+  rating,
+  navigation
+) => dispatch => {
   const docRef = db.collection('employees').doc(employeeID);
+  const popAction = StackActions.pop({ n: 1 });
 
   docRef.set(
     {
@@ -68,14 +62,8 @@ export const editEmployee = (values, employeeID, timestamp, avataruRi, rating) =
     },
     { merge: true }
   );
+  navigation.dispatch(popAction);
 };
-
-export const toggleEmployeeFetching = fetching => ({
-  type: TOGGLE_EMPLOYE_FETCHING,
-  payload: fetching
-});
-
-//
 
 export function uploadImagesToFirebaseStorage(state, companyID) {
   return dispatch => {
@@ -131,16 +119,15 @@ export function uploadImagesToFirebaseStorage(state, companyID) {
       console.log('Response = ', response);
 
       if (response.didCancel) {
-        console.log('User cancelled image picker');
+        dispatch(() => state.setState({ imageUploading: false }));
       } else if (response.error) {
         console.log('ImagePicker Error: ', response.error);
       } else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
       } else {
         const source = { uri: response.uri };
-
-        const imgName = moment().valueOf();
-        uploadImage(response.uri, imgName)
+        const imageName = moment().valueOf();
+        uploadImage(response.uri, imageName)
           .then(() => {
             console.log('Upload Success', source);
           })
@@ -153,6 +140,8 @@ export function uploadImagesToFirebaseStorage(state, companyID) {
 }
 
 export const deleteAvatarFromStorage = avatar => dispatch => {
+  console.log('avatar in delete action', avatar);
+
   firebase
     .storage()
     .refFromURL(avatar)
@@ -214,3 +203,30 @@ export const deleteAvatarFromStorage = avatar => dispatch => {
 //       });
 //   };
 // }
+
+// export const getCurrentEmployee = employeeID => (dispatch, getState) => {
+//   console.log('before if in employe action....getstate', getState().employee.isFetching);
+//   if (getState().employee.isFetching) {
+//     console.log('if in employee action....getstate', getState().employee.isFetching);
+
+//     const docRef = db.collection('employees').doc(employeeID);
+//     docRef
+//       .get()
+//       .then(doc => {
+//         if (doc.exists) {
+//           console.log('Fetched document!', doc.data());
+//           dispatch({ type: GET_CURRENT_EMPLOYEE, employee: doc.data(), isFetching: false });
+//         } else {
+//           console.log('No such document!');
+//         }
+//       })
+//       .catch(error => {
+//         console.log('Error getting document:', error);
+//       });
+//   }
+// };
+
+// export const toggleEmployeeFetching = fetching => ({
+//   type: TOGGLE_EMPLOYE_FETCHING,
+//   payload: fetching
+// });

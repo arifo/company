@@ -3,12 +3,17 @@ import { db } from '../../App';
 
 import {
   GET_COMPANIES,
-  GET_CURRENT_COMPANY,
-  TOGGLE_COMPANY_FETCHING,
+  ADD_COMPANY,
+  DELETE_COMPANY,
+  GET_EMPLOYEES,
+  DELETE_EMPLOYEE,
+  GET_MEMOS,
   TOGGLE_LISTENER_FETCHING,
   LISTENERS_UNSUBED,
-  GET_MEMOS,
-  GET_EMPLOYEES
+  DELETE_MEMO,
+  GET_ALL_COMPANIES,
+  GET_ALL_EMPLOYEES,
+  GET_ALL_MEMOS
 } from './types';
 
 const listeners = {
@@ -22,67 +27,78 @@ export const getCompanies = () => dispatch => {
     .collection('companies')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot({ includeMetadataChanges: true }, querySnapshot => {
-      const arr = [];
-      querySnapshot.forEach(doc => {
-        arr.push(doc.data());
+      const obj = {};
+      querySnapshot.docChanges().forEach(changed => {
+        if (changed.type === 'added') {
+          querySnapshot.forEach(doc => {
+            Object.assign(obj, { [doc.id]: doc.data() });
+          });
+          dispatch({ type: GET_ALL_COMPANIES, payload: obj });
+        }
+        if (changed.type === 'modified') {
+          dispatch({ type: GET_COMPANIES, id: changed.doc.id, payload: changed.doc.data() });
+        }
+        if (changed.type === 'removed') {
+          dispatch({ type: DELETE_COMPANY, id: changed.doc.id });
+        }
       });
-      dispatch({ type: GET_COMPANIES, payload: arr });
       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
     });
 };
 
-export const getMemos = id => dispatch => {
+export const getMemos = () => dispatch => {
   listeners.memo = db
     .collection('memos')
-    .where('companyID', '==', id)
+    .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot(querySnapshot => {
-      const arr = [];
-      querySnapshot.forEach(doc => {
-        arr.push(doc.data());
+      const obj = {};
+      querySnapshot.docChanges().forEach(changed => {
+        if (changed.type === 'added') {
+          querySnapshot.forEach(doc => {
+            Object.assign(obj, { [doc.id]: doc.data() });
+          });
+          dispatch({ type: GET_ALL_MEMOS, payload: obj });
+        }
+        if (changed.type === 'modified') {
+          dispatch({ type: GET_MEMOS, id: changed.doc.id, payload: changed.doc.data() });
+        }
+        if (changed.type === 'removed') {
+          dispatch({ type: DELETE_MEMO, id: changed.doc.id });
+        }
       });
-      dispatch({ type: GET_MEMOS, payload: arr });
+      dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
     });
 };
 
-export const getEmployees = id => dispatch => {
+export const getEmployees = () => dispatch => {
   listeners.employee = db
     .collection('employees')
-    .where('companyID', '==', id)
+    .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot(querySnapshot => {
-      const arr = [];
-      querySnapshot.forEach(doc => {
-        arr.push(doc.data());
+      const obj = {};
+      querySnapshot.docChanges().forEach(changed => {
+        if (changed.type === 'added') {
+          querySnapshot.forEach(doc => {
+            Object.assign(obj, { [doc.id]: doc.data() });
+          });
+          dispatch({ type: GET_ALL_EMPLOYEES, payload: obj });
+        }
+        if (changed.type === 'modified') {
+          dispatch({ type: GET_EMPLOYEES, id: changed.doc.id, payload: changed.doc.data() });
+        }
+        if (changed.type === 'removed') {
+          dispatch({ type: DELETE_EMPLOYEE, id: changed.doc.id });
+        }
       });
-      dispatch({ type: GET_EMPLOYEES, payload: arr });
+      dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
     });
 };
 
 export const unsubscribe = listenerName => {
-  // console.log(`unsubscribing ${listenerName} listener...`);
   listeners[listenerName]();
   return {
     type: LISTENERS_UNSUBED
   };
-};
-
-export const getCurrentCompany = companyID => (dispatch, getState) => {
-  if (getState().company.isFetching) {
-    const docRef = db.collection('companies').doc(companyID);
-
-    docRef
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          // console.log('Fetched company document!', doc.data());
-          dispatch({ type: GET_CURRENT_COMPANY, company: doc.data(), isFetching: false });
-        } else {
-          console.log('No such document!');
-        }
-      })
-      .catch(error => {
-        console.log('Error getting document:', error);
-      });
-  }
 };
 
 export const addCompany = (companyInfo, uuid) => dispatch => {
@@ -96,11 +112,10 @@ export const addCompany = (companyInfo, uuid) => dispatch => {
   batch.set(updateUserCompaniesRef, { companies: { [`${uuid}`]: true } }, { merge: true });
 
   batch.commit();
+  dispatch({ type: ADD_COMPANY, payload: companyInfo, id: uuid });
 };
 
-export const deleteCompany = company => dispatch => {
-  const { id, user } = company;
-
+export const deleteCompany = (id, user) => dispatch => {
   db.collection('employees')
     .where('companyID', '==', id)
     .get()
@@ -154,10 +169,6 @@ export const editCompany = (values, companyID, timestamp) => dispatch => {
     .then(() => {});
 };
 
-export const toggleCompanyFetching = fetching => ({
-  type: TOGGLE_COMPANY_FETCHING,
-  payload: fetching
-});
 export const toggleListenerFetching = fetching => ({
   type: TOGGLE_LISTENER_FETCHING,
   payload: fetching

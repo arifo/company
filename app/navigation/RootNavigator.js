@@ -1,6 +1,5 @@
 import React from 'react';
 import { createSwitchNavigator, createStackNavigator } from 'react-navigation';
-import { Icon } from 'react-native-elements';
 
 import LoadingScreen from '../screens/authScreens/LoadingScreen';
 import LoginScreen from '../screens/authScreens/LoginScreen';
@@ -13,6 +12,7 @@ import AddEmployee from '../screens/employeeScreens/AddEmployee';
 import ViewEmployee from '../screens/employeeScreens/ViewEmployee';
 import AddMemo from '../screens/memoScreens/AddMemo';
 import ViewMemo from '../screens/memoScreens/ViewMemo';
+import HeaderButton from '../components/HeaderButton';
 
 const AuthStack = createStackNavigator({
   Login: {
@@ -54,14 +54,14 @@ const AppStack = createStackNavigator(
       navigationOptions: ({ navigation }) => ({
         headerTitle: navigation.state.params.title,
         headerRight: (
-          <Icon
+          <HeaderButton
             name="edit"
             type="feather"
             color="#0082C0"
-            size={25}
             onPress={() =>
-              navigation.navigate('AddCompany', {
+              navigation.replace('AddCompany', {
                 title: `Edit ${navigation.state.params.title}`,
+                companyID: navigation.state.params.companyID,
                 type: 'edit'
               })
             }
@@ -81,15 +81,16 @@ const AppStack = createStackNavigator(
       navigationOptions: ({ navigation }) => ({
         headerTitle: navigation.state.params.title,
         headerRight: (
-          <Icon
+          <HeaderButton
             name="edit"
             type="feather"
             color="#0082C0"
-            size={25}
             onPress={() =>
-              navigation.navigate('AddEmployee', {
+              navigation.replace('AddEmployee', {
                 title: `Edit ${navigation.state.params.title}`,
-                type: 'edit'
+                type: 'edit',
+                employeeID: navigation.state.params.employeeID,
+                companyID: navigation.state.params.companyID
               })
             }
           />
@@ -108,15 +109,16 @@ const AppStack = createStackNavigator(
       navigationOptions: ({ navigation }) => ({
         headerTitle: navigation.state.params.title,
         headerRight: (
-          <Icon
+          <HeaderButton
             name="edit"
             type="feather"
             color="#0082C0"
-            size={25}
             onPress={() =>
-              navigation.navigate('AddMemo', {
+              navigation.replace('AddMemo', {
                 title: `Edit ${navigation.state.params.title}`,
-                type: 'edit'
+                type: 'edit',
+                memoID: navigation.state.params.memoID,
+                companyID: navigation.state.params.companyID
               })
             }
           />

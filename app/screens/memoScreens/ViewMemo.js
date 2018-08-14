@@ -1,23 +1,15 @@
 import React, { Component } from 'react';
-import { ScrollView, View, Text, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import _ from 'lodash';
 import ViewMoreText from 'react-native-view-more-text';
+import Communications from 'react-native-communications';
 
-import { getCurrentMemo } from '../../redux/actions';
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
 
 class ViewMemo extends Component {
-  componentDidMount() {
-    const { memoID } = this.props.navigation.state.params;
-    console.log('memoID', memoID);
-    this.props.getCurrentMemo(memoID);
-  }
-
-  componentDidUpdate() {}
-
   renderViewMore(onPress) {
     return (
       <View
@@ -52,15 +44,14 @@ class ViewMemo extends Component {
     );
   }
 
+  handlePhone = phone => Communications.phonecall(phone, true);
+
+  handleEmail = email => Communications.email([email], null, null, null, null);
+
   render() {
-    if (this.props.isFetching) {
-      return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#0082C0" />
-        </View>
-      );
-    }
-    const { title, note, contact, reminders, createdAt, lastModified } = this.props.currentMemo;
+    const { memoID } = this.props.navigation.state.params;
+
+    const { title, note, contact, reminders, createdAt, lastModified } = this.props.memo[memoID];
 
     const selectedContact = _.filter(this.props.employees, employee => employee.id === contact.id);
 
@@ -81,8 +72,24 @@ class ViewMemo extends Component {
           {_.isEmpty(selectedContact) ? null : (
             <CustomCard label="Contact">
               <Text>name: {selectedContact[0].name}</Text>
-              <Text>phone: {selectedContact[0].phone}</Text>
-              <Text>email: {selectedContact[0].email}</Text>
+              <Text>
+                phone:{' '}
+                <Text
+                  style={{ fontWeight: '400', color: 'blue' }}
+                  onPress={() => this.handlePhone(selectedContact[0].phone)}
+                >
+                  {selectedContact[0].phone}
+                </Text>
+              </Text>
+              <Text>
+                email:{' '}
+                <Text
+                  style={{ fontWeight: '400', color: 'blue' }}
+                  onPress={() => this.handleEmail(selectedContact[0].email)}
+                >
+                  {selectedContact[0].email}
+                </Text>
+              </Text>
             </CustomCard>
           )}
 
@@ -120,12 +127,8 @@ class ViewMemo extends Component {
 }
 
 const mapStateToProps = state => ({
-  currentMemo: state.memo.currentMemo,
-  isFetching: state.memo.isFetching,
+  memo: state.memo.memos,
   employees: state.employee.employees
 });
 
-export default connect(
-  mapStateToProps,
-  { getCurrentMemo }
-)(ViewMemo);
+export default connect(mapStateToProps)(ViewMemo);

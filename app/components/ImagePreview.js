@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import { Modal, View, TouchableWithoutFeedback, StyleSheet, Image } from 'react-native';
 
 import PropTypes from 'prop-types';
-// import Image from 'react-native-image-progress';
-// import ProgressBar from 'react-native-progress/Bar';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -32,8 +30,6 @@ export default class ImagePreview extends Component {
     );
   }
 }
-
-// indicator={indicator || ProgressBar} indicatorProps={this.props.indicatorProps}
 
 ImagePreview.propTypes = {
   indicator: PropTypes.func,

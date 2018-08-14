@@ -1,39 +1,49 @@
 import {
   GET_COMPANIES,
-  GET_CURRENT_COMPANY,
-  TOGGLE_COMPANY_FETCHING,
-  TOGGLE_LISTENER_FETCHING
+  ADD_COMPANY,
+  DELETE_COMPANY,
+  TOGGLE_LISTENER_FETCHING,
+  LOGOUT,
+  GET_ALL_COMPANIES
 } from '../actions/types';
 
 const initialState = {
-  companies: [],
-  currentCompany: {},
-  isFetching: false,
+  companies: {},
   listerFetching: false
 };
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case GET_COMPANIES: {
+    case GET_ALL_COMPANIES: {
       return { ...state, companies: action.payload };
     }
-    case GET_CURRENT_COMPANY: {
-      return { ...state, currentCompany: action.company, isFetching: action.isFetching };
+    case GET_COMPANIES: {
+      return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
     }
-    case TOGGLE_COMPANY_FETCHING: {
-      return {
-        ...state,
-        isFetching: action.payload
-      };
+    case DELETE_COMPANY: {
+      const updatedCompanies = removeProperty(state.companies, action.id);
+      return { ...state, companies: updatedCompanies };
+    }
+    case ADD_COMPANY: {
+      return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
     }
     case TOGGLE_LISTENER_FETCHING: {
       return {
         ...state,
-
         listerFetching: action.payload
       };
     }
+    case LOGOUT:
+      return initialState;
     default:
       return state;
   }
 };
+
+const removeProperty = (obj, property) =>
+  Object.keys(obj).reduce((acc, key) => {
+    if (key !== property) {
+      return { ...acc, [key]: obj[key] };
+    }
+    return acc;
+  }, {});

@@ -8,7 +8,7 @@ import {
   FlatList,
   BackHandler
 } from 'react-native';
-import { Header, Icon, SearchBar, Text } from 'react-native-elements';
+import { Header, Icon, SearchBar, Text, Button } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import AlphabetListView from 'react-native-alphabetlistview';
@@ -16,13 +16,15 @@ import AlphabetListView from 'react-native-alphabetlistview';
 import {
   logoutAction,
   getCompanies,
-  toggleCompanyFetching,
+  getEmployees,
+  getMemos,
   toggleListenerFetching,
   unsubscribe
 } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
+import HeaderButton from '../components/HeaderButton';
 
 class Companies extends Component {
   constructor(props) {
@@ -41,6 +43,9 @@ class Companies extends Component {
   componentDidMount() {
     this.props.toggleListenerFetching(true);
     this.props.getCompanies();
+    this.props.getEmployees();
+    this.props.getMemos();
+
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (this.state.searchFocused) {
         this.search.blur();
@@ -53,6 +58,8 @@ class Companies extends Component {
 
   componentWillUnmount() {
     this.props.unsubscribe('company');
+    this.props.unsubscribe('employee');
+    this.props.unsubscribe('memo');
     this.backHandler.remove();
   }
 
@@ -65,7 +72,6 @@ class Companies extends Component {
   };
 
   onListItemPress = item => {
-    this.props.toggleCompanyFetching(true);
     this.props.navigation.navigate('ViewCompany', {
       title: item.name,
       companyID: item.id
@@ -73,7 +79,6 @@ class Companies extends Component {
   };
 
   onAddImagePress = () => {
-    this.props.toggleCompanyFetching(true);
     this.props.navigation.navigate('AddCompany', {
       title: 'New Company'
     });
@@ -97,6 +102,12 @@ class Companies extends Component {
     );
   };
 
+  onAddCompanyPress = () => {
+    this.props.navigation.navigate('AddCompany', {
+      title: 'New Company'
+    });
+  };
+
   getFirstLetterFrom(value) {
     return value.slice(0, 1).toUpperCase();
   }
@@ -106,7 +117,7 @@ class Companies extends Component {
       style={{
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(0,0,0,.1)',
-        height: 40,
+        height: 80,
         justifyContent: 'center',
         paddingLeft: 15
       }}
@@ -149,11 +160,10 @@ class Companies extends Component {
           data={data}
           style={{ backgroundColor: '#fff' }}
           sectionHeaderHeight={30}
-          cellHeight={40}
+          cellHeight={80}
           sectionHeader={this.renderSectionHeader}
           cell={this.renderCell}
           updateScrollState
-          sectionListFontStyle={{ color: 'red' }}
         />
       );
     }
@@ -181,21 +191,25 @@ class Companies extends Component {
     );
   }
 
+  renderNoResults = () => (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 22, fontWeight: '600' }}>No results!!!</Text>
+    </View>
+  );
+
+  renderAddBox = () => (
+    <AddImageBox
+      size={0.45}
+      iconType="entypo"
+      iconName="add-to-list"
+      iconSize={100}
+      text="Add Company"
+      onPress={this.onAddImagePress}
+    />
+  );
+
   renderBlankList() {
-    return this.state.searchNoResult ? (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 22, fontWeight: '600' }}>No results!!!</Text>
-      </View>
-    ) : (
-      <AddImageBox
-        size={0.45}
-        iconType="entypo"
-        iconName="add-to-list"
-        iconSize={100}
-        text="Add Company"
-        onPress={this.onAddImagePress}
-      />
-    );
+    return this.state.searchNoResult ? this.renderNoResults() : this.renderAddBox();
   }
 
   render() {
@@ -216,13 +230,9 @@ class Companies extends Component {
       <Container>
         <Header
           leftComponent={
-            <Icon
-              type="ionicon"
-              name={PlatformIOS ? 'ios-log-out' : 'md-log-out'}
-              color="#fff"
-              size={25}
+            <HeaderButton
               onPress={this.onLogoutPress}
-              underlayColor="transparent"
+              name={PlatformIOS ? 'ios-log-out' : 'md-log-out'}
             />
           }
           centerComponent={{
@@ -230,17 +240,9 @@ class Companies extends Component {
             style: { color: '#fff', fontSize: 20, fontWeight: '500' }
           }}
           rightComponent={
-            <Icon
+            <HeaderButton
+              onPress={this.onAddCompanyPress}
               name={PlatformIOS ? 'ios-add-circle' : 'md-add-circle'}
-              type="ionicon"
-              color="#fff"
-              size={25}
-              onPress={() => {
-                this.props.navigation.navigate('AddCompany', {
-                  title: 'New Company'
-                });
-              }}
-              underlayColor="transparent"
             />
           }
           innerContainerStyles={{ alignItems: 'center' }}
@@ -292,6 +294,10 @@ class Companies extends Component {
         </View>
         {this.props.listerFetching ? (
           <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+            {/* <View style={{ flexDirection: 'row', paddingVertical: 20 }}>
+              <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>Fetching companies...</Text>
+              <Icon name="check" type="materialicons" color={'#008fff'} size={35} />
+            </View> */}
             <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
           </View>
         ) : null}
@@ -304,12 +310,20 @@ class Companies extends Component {
 const mapStateToProps = state => ({
   loggedIn: state.auth.loggedIn,
   companies: state.company.companies,
-  isFetching: state.company.isFetching,
+  employees: state.employee.employees,
+  memos: state.memo.memos,
   listerFetching: state.company.listerFetching,
   auth: state.auth
 });
 
 export default connect(
   mapStateToProps,
-  { logoutAction, getCompanies, toggleCompanyFetching, toggleListenerFetching, unsubscribe }
+  {
+    logoutAction,
+    getCompanies,
+    getEmployees,
+    getMemos,
+    toggleListenerFetching,
+    unsubscribe
+  }
 )(Companies);
