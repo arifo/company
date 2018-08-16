@@ -10,7 +10,6 @@ import firebase from 'firebase';
 
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
-import { StackActions } from 'react-navigation';
 
 import * as actions from '../../../redux/actions';
 import styles from './styles';

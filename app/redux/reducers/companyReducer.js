@@ -21,7 +21,7 @@ export default (state = initialState, action) => {
       return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
     }
     case DELETE_COMPANY: {
-      const updatedCompanies = removeProperty(state.companies, action.id);
+      const updatedCompanies = removeCompany(state.companies, action.id);
       return { ...state, companies: updatedCompanies };
     }
     case ADD_COMPANY: {
@@ -40,9 +40,9 @@ export default (state = initialState, action) => {
   }
 };
 
-const removeProperty = (obj, property) =>
+const removeCompany = (obj, id) =>
   Object.keys(obj).reduce((acc, key) => {
-    if (key !== property) {
+    if (key !== id) {
       return { ...acc, [key]: obj[key] };
     }
     return acc;

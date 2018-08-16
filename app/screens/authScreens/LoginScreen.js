@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Text, Card } from 'react-native-elements';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
@@ -14,100 +14,98 @@ class LoginScreen extends Component {
     super(props);
     this.passTextInput = null;
   }
-  componentDidUpdate() {}
 
   onLogin = (values, bag) => {
     const { navigation } = this.props;
     this.props.loginAction(values, bag, navigation);
   };
 
+  getFormValidationShape = () =>
+    Yup.object().shape({
+      email: Yup.string()
+        .email()
+        .required(),
+      password: Yup.string()
+        .min(6)
+        .required()
+    });
+
+  navigateTo = url => () => {
+    this.props.navigation.navigate(url);
+  };
+
+  renderFormik = ({
+    values,
+    handleSubmit,
+    setFieldValue,
+    errors,
+    touched,
+    setFieldTouched,
+    isSubmitting
+  }) => (
+    <Card containerStyle={styles.cardContainer}>
+      <InputForm
+        label="Email"
+        placeholder="example@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        returnKeyType={'next'}
+        onSubmitEditing={() => {
+          this.passTextInput.focus();
+        }}
+        blurOnSubmit={false}
+        value={values.email}
+        onChange={setFieldValue}
+        onTouch={setFieldTouched}
+        name="email"
+        error={touched.email && errors.email}
+      />
+      <InputForm
+        label="Password"
+        placeholder="password"
+        autoCapitalize="none"
+        secureTextEntry
+        returnKeyType={'done'}
+        inputRef={input => {
+          this.passTextInput = input;
+        }}
+        onSubmitEditing={handleSubmit}
+        value={values.password}
+        onChange={setFieldValue}
+        onTouch={setFieldTouched}
+        name="password"
+        error={touched.password && errors.password}
+      />
+
+      <Button
+        title="Login"
+        buttonStyle={styles.loginButton}
+        loading={isSubmitting}
+        disabled={isSubmitting}
+        onPress={handleSubmit}
+      />
+    </Card>
+  );
+
   render() {
     return (
-      <Container style={{ flex: 1, backgroundColor: '#ffffff' }}>
+      <Container>
         <ScrollView
-          style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scollViewContainer}
           keyboardShouldPersistTaps="always"
         >
-          <Text style={{ fontSize: 26, fontWeight: '600', marginVertical: 50 }}>Login</Text>
+          <Text style={styles.loginText}>Login</Text>
           <Formik
             initialValues={{ email: '', password: '' }}
             onSubmit={this.onLogin}
-            validationSchema={Yup.object().shape({
-              email: Yup.string()
-                .email()
-                .required(),
-              password: Yup.string()
-                .min(6)
-                .required()
-            })}
-            render={({
-              values,
-              handleSubmit,
-              setFieldValue,
-              errors,
-              touched,
-              setFieldTouched,
-              isSubmitting
-            }) => (
-              <Card containerStyle={{ width: '100%' }}>
-                <InputForm
-                  label="Email"
-                  placeholder="example@example.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  returnKeyType={'next'}
-                  onSubmitEditing={event => {
-                    this.passTextInput.focus();
-                  }}
-                  blurOnSubmit={false}
-                  value={values.email}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="email"
-                  error={touched.email && errors.email}
-                />
-                <InputForm
-                  label="Password"
-                  placeholder="password"
-                  autoCapitalize="none"
-                  secureTextEntry
-                  returnKeyType={'done'}
-                  inputRef={input => {
-                    this.passTextInput = input;
-                  }}
-                  onSubmitEditing={handleSubmit}
-                  value={values.password}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="password"
-                  error={touched.password && errors.password}
-                />
-
-                <Button
-                  title="Login"
-                  buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-                  loading={isSubmitting}
-                  disabled={isSubmitting}
-                  onPress={handleSubmit}
-                />
-              </Card>
-            )}
+            validationSchema={this.getFormValidationShape()}
+            render={this.renderFormik}
           />
-          <Text
-            style={{ marginTop: 40, fontWeight: '400', color: '#0082C0' }}
-            onPress={() => {
-              this.props.navigation.navigate('ForgotPassword');
-            }}
-          >
+          <Text style={styles.formText} onPress={this.navigateTo('ForgotPassword')}>
             Forgot your password
           </Text>
-          <Text
-            style={{ marginTop: 40, fontWeight: '400', color: '#0082C0' }}
-            onPress={() => {
-              this.props.navigation.navigate('SignUp');
-            }}
-          >
+          <Text style={styles.formText} onPress={this.navigateTo('SignUp')}>
             Sign up
           </Text>
         </ScrollView>
@@ -124,3 +122,12 @@ export default connect(
   mapStateToProps,
   { loginAction }
 )(LoginScreen);
+
+const styles = StyleSheet.create({
+  scrollView: { width: '100%' },
+  scollViewContainer: { alignItems: 'center' },
+  loginText: { fontSize: 26, fontWeight: '600', marginVertical: 30 },
+  cardContainer: { width: '100%', marginTop: 0 },
+  loginButton: { marginVertical: 20, backgroundColor: '#0082C0' },
+  formText: { marginTop: 40, fontWeight: '400', color: '#0082C0' }
+});

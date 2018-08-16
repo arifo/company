@@ -22,7 +22,7 @@ export default (state = initialState, action) => {
       return { ...state, employees: { ...state.employees, [action.id]: action.payload } };
     }
     case DELETE_EMPLOYEE: {
-      const updatedEmployees = removeProperty(state.employees, action.id);
+      const updatedEmployees = removeEmployee(state.employees, action.id);
       return { ...state, employees: updatedEmployees };
     }
     case LOGOUT:
@@ -32,9 +32,9 @@ export default (state = initialState, action) => {
   }
 };
 
-const removeProperty = (obj, property) =>
+const removeEmployee = (obj, id) =>
   Object.keys(obj).reduce((acc, key) => {
-    if (key !== property) {
+    if (key !== id) {
       return { ...acc, [key]: obj[key] };
     }
     return acc;

@@ -18,6 +18,7 @@ class LoadingScreen extends Component {
     const { navigation } = this.props;
     this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
       if (user) {
+        console.log('User memos');
         this.props.alreadyLoggedIn(navigation);
         return;
       }
@@ -33,6 +34,7 @@ class LoadingScreen extends Component {
 
   onNotif(notif) {
     const { navigation } = this.props;
+    console.log('notification', notif);
     this.props.getNotificationMemo(notif.group, notif.tag, notif, navigation);
   }
 

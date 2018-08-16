@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import _ from 'lodash';
@@ -8,6 +8,7 @@ import Communications from 'react-native-communications';
 
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
+import ViewText from '../../components/ViewText';
 
 class ViewMemo extends Component {
   handlePhone = phone => Communications.phonecall(phone, true);
@@ -93,21 +94,6 @@ const LastModified = ({ lastModified }) => (
   <CustomCard label="Last modified">
     <Text>{moment(lastModified).fromNow()}</Text>
   </CustomCard>
-);
-
-const ViewText = ({ onPress, text }) => (
-  <View
-    style={{
-      height: 25,
-      marginTop: 5,
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}
-  >
-    <Text onPress={onPress} style={{ fontWeight: '500' }}>
-      {text}
-    </Text>
-  </View>
 );
 
 const mapStateToProps = state => ({

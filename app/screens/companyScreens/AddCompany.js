@@ -45,6 +45,27 @@ class AddCompany extends Component {
     );
   };
 
+  getValidationScheme = () =>
+    Yup.object().shape({
+      name: Yup.string().required(),
+      description: Yup.string().notRequired()
+    });
+
+  getInitialValue = companyID =>
+    Object.assign({ name: '', description: '' }, this.props.companies[companyID]);
+
+  saveEditCompany = value => {
+    const { companyID } = this.props.navigation.state.params;
+    const { id } = this.props.companies[companyID];
+
+    const lastModified = moment().valueOf();
+    this.props.editCompany(value, id, lastModified);
+    this.props.navigation.replace('ViewCompany', {
+      title: value.name,
+      companyID: id
+    });
+  };
+
   saveNewCompany = value => {
     UUIDGenerator.getRandomUUID().then(uuid => {
       const companyInfo = {
@@ -66,80 +87,63 @@ class AddCompany extends Component {
     });
   };
 
-  saveEditCompany = value => {
-    const { companyID } = this.props.navigation.state.params;
-    const { id } = this.props.companies[companyID];
-
-    const lastModified = moment().valueOf();
-    this.props.editCompany(value, id, lastModified);
-    this.props.navigation.replace('ViewCompany', {
-      title: value.name,
-      companyID: id
-    });
+  renderFormik = ({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => {
+    const { type } = this.props.navigation.state.params;
+    return (
+      <Card containerStyle={{ flexGrow: 1 }}>
+        <InputForm
+          label="Company Name"
+          placeholder="your company name..."
+          returnKeyType={'next'}
+          onSubmitEditing={() => {
+            this.passTextInput.focus();
+          }}
+          value={values.name}
+          onChange={setFieldValue}
+          onTouch={setFieldTouched}
+          name="name"
+          error={touched.name && errors.name}
+        />
+        <InputForm
+          label="Description"
+          multiline
+          placeholder="company description ..."
+          returnKeyType={'done'}
+          inputRef={input => {
+            this.passTextInput = input;
+          }}
+          value={values.description}
+          onChange={setFieldValue}
+          onTouch={setFieldTouched}
+          name="description"
+          error={touched.description && errors.description}
+        />
+        <Button
+          title="Save Company"
+          buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
+          onPress={handleSubmit}
+        />
+        {type === 'edit' && (
+          <Button
+            title="Delete Company"
+            buttonStyle={{ backgroundColor: 'red', marginTop: 10 }}
+            onPress={this.onDelete}
+          />
+        )}
+      </Card>
+    );
   };
 
   render() {
-    const { type, companyID } = this.props.navigation.state.params;
+    const { companyID } = this.props.navigation.state.params;
     return (
       <Container style={{ flex: 1, alignItems: 'center' }}>
         <ScrollView style={{ width: deviceWidth }} keyboardShouldPersistTaps="always">
           <Formik
-            initialValues={
-              type === 'edit' && this.props.companies[companyID]
-                ? {
-                    name: this.props.companies[companyID].name,
-                    description: this.props.companies[companyID].description
-                  }
-                : { name: '', description: '' }
-            }
+            initialValues={this.getInitialValue(companyID)}
             onSubmit={this.onSubmit}
-            validationSchema={Yup.object().shape({
-              name: Yup.string().required(),
-              description: Yup.string().notRequired()
-            })}
-            render={({ values, handleSubmit, setFieldValue, errors, touched, setFieldTouched }) => (
-              <Card containerStyle={{ flexGrow: 1 }}>
-                <InputForm
-                  label="Company Name"
-                  placeholder="your company name..."
-                  returnKeyType={'next'}
-                  onSubmitEditing={() => {
-                    this.passTextInput.focus();
-                  }}
-                  value={values.name}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="name"
-                  error={touched.name && errors.name}
-                />
-                <InputForm
-                  label="Description"
-                  multiline
-                  placeholder="company description ..."
-                  returnKeyType={'done'}
-                  inputRef={input => {
-                    this.passTextInput = input;
-                  }}
-                  value={values.description}
-                  onChange={setFieldValue}
-                  onTouch={setFieldTouched}
-                  name="description"
-                  error={touched.description && errors.description}
-                />
-                <Button
-                  title="Save Company"
-                  buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-                  onPress={handleSubmit}
-                />
-                {type === 'edit' ? (
-                  <Button
-                    title="Delete Company"
-                    buttonStyle={{ backgroundColor: 'red', marginTop: 10 }}
-                    onPress={this.onDelete}
-                  />
-                ) : null}
-              </Card>
-            )}
+            validationSchema={this.getValidationScheme()}
+            render={this.renderFormik}
           />
         </ScrollView>
       </Container>

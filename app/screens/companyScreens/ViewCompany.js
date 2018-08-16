@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Dimensions } from 'react-native';
+import { View, ScrollView, Dimensions, StyleSheet } from 'react-native';
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -20,6 +20,7 @@ import CustomCard from '../../components/CustomCard';
 import AddImageBox from '../../components/AddImageBox';
 import CustomFlatList from '../../components/CustomFlatList';
 import ImagePreview from '../../components/ImagePreview';
+import ViewText from '../../components/ViewText';
 
 const deviceHeight = Dimensions.get('screen').height;
 const deviceWidth = Dimensions.get('screen').width;
@@ -61,36 +62,38 @@ class ViewCompany extends Component {
   onMemoSelect = item => {
     const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('ViewMemo', {
+      companyID,
       title: `${item.title}`,
-      memoID: item.id,
-      companyID
+      memoID: item.id
     });
   };
 
   onAddMemo = () => {
     const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('AddMemo', {
-      title: 'New memo',
-      companyID
+      companyID,
+      title: 'New memo'
     });
   };
 
-  handleTabSwitch(index) {
-    this.setState(previousState => ({ isTabOneShowing: !previousState.isTabOneShowing, index }));
-  }
+  tabs = [this.renderEmployeeTab, this.renderMemoTab];
 
-  showModal = avatar => {
-    this.setState({ visible: true, selectedItem: avatar });
-  };
+  handleTabSwitch = index => this.setState({ index });
+
+  showModal = avatar => this.setState({ visible: true, selectedItem: avatar });
+
+  renderTab = () => this.tabs[this.state.index].call(this);
+
   renderEmployeeTab() {
     const { companyID } = this.props.navigation.state.params;
     let data = this.props.employees;
-    data = _.pickBy(data, (val, key) => val.companyID === companyID);
-    data = _.map(data, (val, key) => val);
+    data = _.pickBy(data, val => val.companyID === companyID);
+    data = _.map(data, val => val);
+
     return (
-      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
+      <View style={styles.tab.container}>
         <View
-          style={{ maxHeight: deviceHeight * 0.35, justifyContent: 'center', flexGrow: 1 }}
+          style={styles.tab.innerContainer}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
@@ -119,11 +122,7 @@ class ViewCompany extends Component {
           )}
         </View>
 
-        <Button
-          title="Add employee"
-          buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
-          onPress={this.onAddEmployee}
-        />
+        <Button title="Add employee" buttonStyle={styles.tab.button} onPress={this.onAddEmployee} />
       </View>
     );
   }
@@ -131,21 +130,20 @@ class ViewCompany extends Component {
   renderMemoTab() {
     const { companyID } = this.props.navigation.state.params;
     const data = _.chain(this.props.memos)
-      .pickBy((val, key) => val.companyID === companyID)
-      .map((val, key) => val)
+      .pickBy(val => val.companyID === companyID)
+      .map(val => val)
       .orderBy(['lastModified', 'createdAt'], [this.state.sortKey])
       .value();
     return (
-      <View style={{ marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 }}>
+      <View style={styles.tab.container}>
         <View
-          style={{ maxHeight: deviceHeight * 0.35, justifyContent: 'center', flexGrow: 1 }}
+          style={styles.tab.innerContainer}
           onStartShouldSetResponderCapture={() => {
             this.setState({ enableScrollViewScroll: false });
           }}
         >
-          {data.length > 0 ? (
-            <CustomFlatList isMemoTab data={data} onPress={this.onMemoSelect} />
-          ) : (
+          <CustomFlatList isMemoTab data={data} onPress={this.onMemoSelect} />
+          {data.length === 0 && (
             <AddImageBox
               size={0.45}
               iconType="MaterialIcons"
@@ -159,7 +157,7 @@ class ViewCompany extends Component {
           <Button
             title="Add memo"
             containerViewStyle={{ flex: 0.9 }}
-            buttonStyle={{ marginVertical: 20, backgroundColor: '#0082C0' }}
+            buttonStyle={styles.tab.button}
             onPress={this.onAddMemo}
           />
           <Icon
@@ -179,28 +177,15 @@ class ViewCompany extends Component {
       </View>
     );
   }
-  renderViewMore(onPress) {
-    return (
-      <View style={styles.viewMoreLessStyle}>
-        <Text onPress={onPress} style={{ fontWeight: '500' }}>
-          View more
-        </Text>
-      </View>
-    );
-  }
-  renderViewLess(onPress) {
-    return (
-      <View style={styles.viewMoreLessStyle}>
-        <Text onPress={onPress} style={{ fontWeight: '500' }}>
-          View less
-        </Text>
-      </View>
-    );
-  }
 
   render() {
     const { companyID } = this.props.navigation.state.params;
     const { name, description, createdAt, lastModified } = this.props.companies[companyID];
+    const employees = _.pickBy(this.props.employees, val => val.companyID === companyID);
+    const memos = _.pickBy(this.props.memos, val => val.companyID === companyID);
+    const employeesCount = Object.keys(employees).length;
+    const memosCount = Object.keys(memos).length;
+
     return (
       <Container
         style={{ alignItems: 'center' }}
@@ -209,15 +194,15 @@ class ViewCompany extends Component {
         }}
       >
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 40, width: deviceWidth }}
+          contentContainerStyle={styles.scrollView}
           scrollEnabled={this.state.enableScrollViewScroll}
         >
           <CustomCard label="Name" textStyle={{ fontSize: 20, fontWeight: '500' }} text={name} />
           <CustomCard label="Description">
             <ViewMoreText
               numberOfLines={5}
-              renderViewMore={this.renderViewMore}
-              renderViewLess={this.renderViewLess}
+              renderViewMore={onPress => <ViewText onPress={onPress} text="View more" />}
+              renderViewLess={onPress => <ViewText onPress={onPress} text="View less" />}
               textStyle={{ textAlign: 'justify' }}
             >
               <Text>{description}</Text>
@@ -227,36 +212,26 @@ class ViewCompany extends Component {
           <CustomCard>
             <SegmentControl
               values={['Employees', 'Memos']}
-              badges={[this.props.employees.length, this.props.memos.length]}
+              badges={[employeesCount, memosCount]}
               selectedIndex={this.state.index}
               height={40}
               onTabPress={this.handleTabSwitch.bind(this)}
               borderRadius={5}
               tabBadgeContainerStyle={{ backgroundColor: 'red' }}
             />
-
-            {this.state.isTabOneShowing ? this.renderEmployeeTab() : this.renderMemoTab()}
+            {this.renderTab()}
           </CustomCard>
 
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              paddingHorizontal: 14,
-              marginTop: 10
-            }}
-          >
-            {createdAt ? (
-              <Text style={{ color: '#bfbfbf', fontSize: 10 }}>
+          <View style={styles.infoTextContainer}>
+            {createdAt && (
+              <Text style={styles.infoText}>
                 created: {moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}
               </Text>
-            ) : null}
+            )}
 
-            {lastModified ? (
-              <Text style={{ color: '#bfbfbf', fontSize: 10 }}>
-                last modified: {moment(lastModified).fromNow()}
-              </Text>
-            ) : null}
+            {lastModified !== '' && (
+              <Text style={styles.infoText}>last modified: {moment(lastModified).fromNow()}</Text>
+            )}
           </View>
         </ScrollView>
       </Container>
@@ -282,11 +257,17 @@ export default connect(
 )(ViewCompany);
 
 const styles = {
-  viewMoreLessStyle: {
-    height: 25,
-    marginTop: 5,
-    backgroundColor: '#e2e2e2',
-    alignItems: 'center',
-    justifyContent: 'center'
+  tab: {
+    container: { marginTop: 20, maxHeight: deviceHeight * 0.45, flexGrow: 1 },
+    innerContainer: { maxHeight: deviceHeight * 0.35, justifyContent: 'center', flexGrow: 1 },
+    button: { marginVertical: 20, backgroundColor: '#0082C0' }
+  },
+  scrollView: { paddingBottom: 40, width: deviceWidth },
+  infoText: { color: '#bfbfbf', fontSize: 10 },
+  infoTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    marginTop: 10
   }
 };
