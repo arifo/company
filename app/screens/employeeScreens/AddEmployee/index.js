@@ -7,6 +7,7 @@ import moment from 'moment';
 import Slider from 'react-native-slider';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import firebase from 'firebase';
+import ImagePicker from 'react-native-image-picker';
 
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
@@ -26,7 +27,6 @@ class AddEmployee extends Component {
     this.state = {
       avatar: '',
       imageSelected: false,
-      imageUploading: false,
       rating: 10,
       isDateTimePickerVisible: false
     };
@@ -37,8 +37,9 @@ class AddEmployee extends Component {
     if (type === 'edit') {
       const { avatar, rating } = this.props.employee[employeeID];
       if (avatar) {
-        this.setState({ avatar, imageSelected: true, rating });
+        this.setState({ avatar, imageSelected: true });
       }
+      this.setState({ rating });
     }
     if (type !== 'edit') {
       this.setState({ avatar: '', imageSelected: false, rating: 10 });
@@ -50,20 +51,26 @@ class AddEmployee extends Component {
     return type === 'edit' ? this.saveEditEmployee(values) : this.saveNewEmployee(values);
   };
 
-  // uploadImage(){}
-  // setUserCredentials(values, state){}
+  selectImage = () => {
+    const options = {
+      title: 'Select Image',
+      cameraType: 'front',
+      quality: 0.4,
+      storageOptions: { skipBackup: true, path: 'images' }
+    };
 
-  // async saveUserToStore(navigation) {
-  //   try {
-  //     const imageUrl = await uploadImage(this.state.uri);
-  //     const userInfo = setUserCredentials(values, state, imageUrl);
-  // await addEmployee();
-  // fetchEnded();
-  // navigation.goBack();
-  //   } catch(e) {
-  //     console.log(e)
-  //   }
-  // }
+    ImagePicker.showImagePicker(options, response => {
+      if (response.didCancel) {
+        console.log('ImagePicker Error: ', response.didCancel);
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+      } else {
+        this.setState({ avatar: response.uri, imageSelected: true });
+      }
+    });
+  };
 
   saveNewEmployee = value => {
     const { companyID } = this.props.navigation.state.params;
@@ -89,9 +96,10 @@ class AddEmployee extends Component {
   saveEditEmployee = value => {
     const { employeeID } = this.props.navigation.state.params;
     const { avatar, rating } = this.state;
+    const employee = this.props.employee[employeeID];
 
     const lastModified = moment().valueOf();
-    this.props.editEmployee(value, employeeID, lastModified, avatar, rating, this.props.navigation);
+    this.props.editEmployee(value, employee, lastModified, avatar, rating, this.props.navigation);
   };
 
   deleteCurrentEmployee = () => {
@@ -103,23 +111,14 @@ class AddEmployee extends Component {
           text: 'Yes',
           onPress: () => {
             const { employeeID } = this.props.navigation.state.params;
-            const employeeToDelete = this.props.employee[employeeID];
-            if (this.state.avatar) {
-              this.props.deleteAvatarFromStorage(this.state.avatar);
-            }
-            this.props.deleteEmployee(employeeToDelete, this.props.navigation);
+            const employee = this.props.employee[employeeID];
+            this.props.deleteEmployee(employee, this.props.navigation);
           }
         },
         { text: 'Cancel', onPress: () => console.log('Cancel Pressed') }
       ],
       { cancelable: true }
     );
-  };
-
-  selectAvatarImg = () => {
-    const { companyID } = this.props.navigation.state.params;
-    this.setState({ imageUploading: true });
-    this.props.uploadImagesToFirebaseStorage(this, companyID);
   };
 
   showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
@@ -138,7 +137,6 @@ class AddEmployee extends Component {
             size={30}
             color={'#b7bbbf'}
             onPress={() => {
-              this.props.deleteAvatarFromStorage(this.state.avatar);
               this.setState({ avatar: '', imageSelected: false });
             }}
           />
@@ -151,7 +149,7 @@ class AddEmployee extends Component {
         iconType="MaterialIcons"
         iconName="add-a-photo"
         iconSize={85}
-        onPress={this.selectAvatarImg}
+        onPress={this.selectImage}
       />
     );
   }
@@ -329,7 +327,7 @@ class AddEmployee extends Component {
                   buttonStyle={{ marginVertical: 10, backgroundColor: '#0082C0' }}
                   onPress={handleSubmit}
                   loading={isSubmitting}
-                  disabled={this.state.imageUploading || isSubmitting}
+                  disabled={isSubmitting}
                 />
 
                 {type === 'edit' ? (

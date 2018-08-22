@@ -11,14 +11,14 @@ class LoadingScreen extends Component {
   constructor() {
     super();
     this.unsubscriber = null;
-    this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
   }
 
   componentDidMount() {
     const { navigation } = this.props;
     this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        console.log('User memos');
+        console.log('firebase current User exists');
+        // this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
         this.props.alreadyLoggedIn(navigation);
         return;
       }
@@ -32,22 +32,23 @@ class LoadingScreen extends Component {
     }
   }
 
-  onNotif(notif) {
-    const { navigation } = this.props;
-    console.log('notification', notif);
-    this.props.getNotificationMemo(notif.group, notif.tag, notif, navigation);
-  }
+  // onNotif(notif) {
+  //   const { navigation } = this.props;
+  //   console.log('notification', notif);
+  //   if (this.props.loggedIn) {
+  //     const memo = this.props.memo[notif.memoID];
+  //     const company = this.props.company[notif.companyID];
+  //     this.props.getNotificationMemo(memo, company, notif, navigation);
+  //   }
+  // }
 
-  onRegister(token) {
-    Alert.alert('Registered !', JSON.stringify(token));
-    this.setState({ registerToken: token.token, gcmRegistered: true });
-  }
-
-  handlePerm(perms) {
-    Alert.alert('Permissions', JSON.stringify(perms));
-  }
+  // onRegister(token) {
+  //   Alert.alert('Registered !', JSON.stringify(token));
+  //   this.setState({ registerToken: token.token, gcmRegistered: true });
+  // }
 
   render() {
+    console.log('loading screen state', this.props.state);
     return (
       <Container style={{ alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
@@ -57,7 +58,10 @@ class LoadingScreen extends Component {
 }
 
 const mapStateToProps = state => ({
-  loggedIn: state.auth.loggedIn
+  loggedIn: state.auth.loggedIn,
+  company: state.company.companies,
+  memo: state.memo.memos,
+  state
 });
 
 export default connect(

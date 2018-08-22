@@ -1,10 +1,13 @@
 import firebase from 'firebase';
+import moment from 'moment';
 import { NavigationActions, StackActions } from 'react-navigation';
-import PushNotification from 'react-native-push-notification';
 
 import { db } from '../../App';
 
-import { ADD_MEMO, ADD_COMPANY, ALREADY_LOGGED_IN } from './types';
+import { ADD_MEMO, EDIT_MEMO, DELETE_MEMO } from './types';
+
+const popAction = StackActions.pop({ n: 1 });
+const isReminderDue = reminder => moment() < moment(reminder);
 
 export const addMemo = (memo, uuid, navigation) => dispatch => {
   const batch = db.batch();
@@ -13,15 +16,15 @@ export const addMemo = (memo, uuid, navigation) => dispatch => {
   batch.set(addMemoRef, memo);
 
   const updateCompanyMemosRef = db.collection('companies').doc(memo.companyID);
-  batch.set(updateCompanyMemosRef, { memos: { [`${uuid}`]: true } }, { merge: true });
+  batch.set(
+    updateCompanyMemosRef,
+    { memos: { [`${uuid}`]: true }, cacheTimestamp: memo.createdAt },
+    { merge: true }
+  );
 
   batch.commit();
   dispatch({ type: ADD_MEMO, payload: memo, id: uuid });
-  navigation.replace('ViewMemo', {
-    title: memo.title,
-    memoID: memo.id,
-    companyID: memo.companyID
-  });
+  navigation.dispatch(popAction);
 };
 
 export const deleteMemo = (memo, navigation) => dispatch => {
@@ -34,64 +37,61 @@ export const deleteMemo = (memo, navigation) => dispatch => {
   const deleteCompanyMemoRef = db.collection('companies').doc(companyID);
   batch.update(deleteCompanyMemoRef, `memos.${id}`, firebase.firestore.FieldValue.delete());
   batch.commit();
+  dispatch({ type: DELETE_MEMO, id });
   navigation.goBack();
 };
 
-export const editMemo = (values, memoID, reminders, timestamp, navigation) => dispatch => {
-  const docRef = db.collection('memos').doc(memoID);
-  const popAction = StackActions.pop({ n: 1 });
+export const editMemo = (values, memo, reminders, timestamp, navigation) => dispatch => {
+  const docRef = db.collection('memos').doc(memo.id);
+  const data = {
+    ...memo,
+    title: values.title,
+    note: values.note,
+    reminders,
 
-  docRef.set(
-    {
-      title: values.title,
-      note: values.note,
-      reminders,
-      contact: values.contact,
-      lastModified: timestamp
-    },
-    { merge: true }
-  );
+    contact: values.contact,
+    lastModified: timestamp
+  };
+  docRef.set(data, { merge: true });
+
+  db.collection('companies')
+    .doc(navigation.state.params.companyID)
+    .set({ cacheTimestamp: timestamp }, { merge: true });
+
+  dispatch({ type: EDIT_MEMO, id: memo.id, payload: data });
+
   navigation.dispatch(popAction);
 };
 
-export const getNotificationMemo = (companyID, memoID, notif, navigation) => dispatch => {
-  const companyDocRef = db.collection('companies').doc(companyID);
-  const memoDocRef = db.collection('memos').doc(memoID);
-  // dispatch({ type: ALREADY_LOGGED_IN, loggedIn: true });
-  memoDocRef
-    .get()
-    .then(doc => {
-      if (doc.exists) {
-        dispatch({ type: ADD_MEMO, payload: doc.data(), id: doc.id });
-      } else {
-        console.log('No such document!');
-      }
-    })
-    .then(() => {
-      companyDocRef
-        .get()
-        .then(doc => {
-          if (doc.exists) {
-            dispatch({ type: ADD_COMPANY, payload: doc.data(), id: doc.id });
-          } else {
-            console.log('No such document!');
-          }
-        })
-        .then(() => {
-          resetStack(notif, navigation);
-          cancelNotif(notif.id);
-        });
-    })
-    .catch(error => {
-      console.log('Error getting current Memo document:', error);
-    });
+export const handleDueReminders = oldMemo => dispatch => {
+  const memo = Object.assign({}, oldMemo);
+  const oldRemindersCount = (memo.oldReminders || []).length;
+
+  memo.oldReminders = memo.reminders
+    .concat(memo.oldReminders || [])
+    .filter(q => !isReminderDue(q))
+    .sort((a, b) => new Date(b) - new Date(a));
+  memo.reminders = memo.reminders.filter(q => isReminderDue(q));
+
+  memo.lastModified =
+    oldRemindersCount !== memo.oldReminders.length ? new Date() : memo.lastModified;
+
+  const docRef = db.collection('memos').doc(memo.id);
+  const data = { ...memo };
+  docRef.set(data, { merge: true });
+
+  db.collection('companies')
+    .doc(memo.companyID)
+    .set({ cacheTimestamp: memo.lastModified }, { merge: true });
+
+  dispatch({ type: EDIT_MEMO, id: memo.id, payload: data });
 };
 
-const cancelNotif = id => {
-  PushNotification.cancelLocalNotifications({ id });
+export const getNotificationMemo = (memo, company, notif, navigation) => dispatch => {
+  resetStack(company, memo, navigation, notif);
 };
 
-const resetStack = (notif, navigation) => {
+const resetStack = (company, memo, navigation, notif) => {
   navigation.dispatch(
     StackActions.reset({
       index: 2,
@@ -102,16 +102,18 @@ const resetStack = (notif, navigation) => {
         NavigationActions.navigate({
           routeName: 'ViewCompany',
           params: {
-            title: notif.title,
-            companyID: notif.group
+            title: company.name,
+            companyID: company.id
           }
         }),
         NavigationActions.navigate({
           routeName: 'ViewMemo',
           params: {
-            title: notif.message,
-            memoID: notif.tag,
-            companyID: notif.group
+            title: memo.title,
+            memoID: memo.id,
+            companyID: company.id,
+            notifID: notif.id,
+            type: 'notification'
           }
         })
       ]

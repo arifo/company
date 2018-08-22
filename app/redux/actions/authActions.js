@@ -28,7 +28,6 @@ export const signUpAction = (values, bag, navigation) => async dispatch => {
         bag.setErrors({ email: error.message });
       }
     });
-    dispatch({ type: SIGNUP, loggedIn: false });
   }
 };
 
@@ -50,7 +49,6 @@ export const loginAction = (values, bag, navigation) => dispatch => {
         });
     })
     .catch(error => {
-      dispatch({ type: LOGIN, loggedIn: false });
       dispatch(() => {
         bag.setSubmitting(false);
         bag.setErrors({ email: error.message });
@@ -85,7 +83,7 @@ export function alreadyLoggedIn(navigation) {
 
 export function logoutAction() {
   return dispatch => {
-    dispatch({ type: LOGOUT, loggedIn: false });
     firebase.auth().signOut();
+    dispatch({ type: LOGOUT, loggedIn: false });
   };
 }

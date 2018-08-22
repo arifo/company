@@ -8,23 +8,17 @@ import {
   FlatList,
   BackHandler
 } from 'react-native';
-import { Header, Icon, SearchBar, Text, Button } from 'react-native-elements';
+import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import AlphabetListView from 'react-native-alphabetlistview';
 
-import {
-  logoutAction,
-  getCompanies,
-  getEmployees,
-  getMemos,
-  toggleListenerFetching,
-  unsubscribe
-} from '../redux/actions';
+import { logoutAction, handleCaching, getNotificationMemo } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
 import HeaderButton from '../components/HeaderButton';
+import NotifService from '../screens/memoScreens/notification/NotifService';
 
 class Companies extends Component {
   constructor(props) {
@@ -40,17 +34,13 @@ class Companies extends Component {
     };
   }
 
-  componentDidMount() {
-    this.props.toggleListenerFetching(true);
-    this.props.getCompanies();
-    this.props.getEmployees();
-    this.props.getMemos();
-
+  async componentDidMount() {
+    this.props.handleCaching();
+    this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!this.state.searchFocused) {
         return false;
       }
-      
       this.search.blur();
       this.setState({ value: '' });
       return true;
@@ -58,10 +48,27 @@ class Companies extends Component {
   }
 
   componentWillUnmount() {
-    this.props.unsubscribe('company');
-    this.props.unsubscribe('employee');
-    this.props.unsubscribe('memo');
     this.backHandler.remove();
+  }
+
+  onNotif(notif) {
+    const { navigation, memos, companies } = this.props;
+    console.log('notification', notif);
+    const memo = memos[notif.memoID];
+    const company = companies[notif.companyID];
+    // navigation.navigate('ViewMemo', {
+    //   title: memo.title,
+    //   memoID: memo.id,
+    //   companyID: company.id,
+    //   notifID: notif.id,
+    //   type: 'notification'
+    // });
+    this.props.getNotificationMemo(memo, company, notif, navigation);
+  }
+
+  onRegister(token) {
+    Alert.alert('Registered !', JSON.stringify(token));
+    this.setState({ registerToken: token.token, gcmRegistered: true });
   }
 
   onChangeText = value => {
@@ -118,7 +125,7 @@ class Companies extends Component {
       style={{
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(0,0,0,.1)',
-        height: 80,
+        height: 40,
         justifyContent: 'center',
         paddingLeft: 15
       }}
@@ -161,7 +168,7 @@ class Companies extends Component {
           data={data}
           style={{ backgroundColor: '#fff' }}
           sectionHeaderHeight={30}
-          cellHeight={80}
+          cellHeight={40}
           sectionHeader={this.renderSectionHeader}
           cell={this.renderCell}
           updateScrollState
@@ -215,6 +222,7 @@ class Companies extends Component {
 
   render() {
     const { companies } = this.props;
+    console.log('render', companies);
     let data = _.chain(companies)
       .orderBy([item => item.name.toLowerCase()], [this.state.sortKey])
       .filter(item => {
@@ -293,15 +301,11 @@ class Companies extends Component {
             underlayColor="transparent"
           />
         </View>
-        {this.props.listerFetching ? (
+        {this.props.listerFetching && (
           <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
-            {/* <View style={{ flexDirection: 'row', paddingVertical: 20 }}>
-              <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>Fetching companies...</Text>
-              <Icon name="check" type="materialicons" color={'#008fff'} size={35} />
-            </View> */}
             <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
           </View>
-        ) : null}
+        )}
         {_.isEmpty(data) ? this.renderBlankList() : this.renderList(data)}
       </Container>
     );
@@ -309,7 +313,7 @@ class Companies extends Component {
 }
 
 const mapStateToProps = state => ({
-  loggedIn: state.auth.loggedIn,
+  // loggedIn: state.auth.loggedIn,
   companies: state.company.companies,
   employees: state.employee.employees,
   memos: state.memo.memos,
@@ -319,12 +323,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  {
-    logoutAction,
-    getCompanies,
-    getEmployees,
-    getMemos,
-    toggleListenerFetching,
-    unsubscribe
-  }
+  { logoutAction, handleCaching, getNotificationMemo }
 )(Companies);

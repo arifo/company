@@ -1,4 +1,4 @@
-import { GET_MEMOS, ADD_MEMO, DELETE_MEMO, LOGOUT, GET_ALL_MEMOS } from '../actions/types';
+import { GET_MEMOS, ADD_MEMO, DELETE_MEMO, LOGOUT, EDIT_MEMO } from '../actions/types';
 
 const initialState = {
   memos: {}
@@ -6,10 +6,10 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case GET_ALL_MEMOS: {
+    case GET_MEMOS: {
       return { ...state, memos: action.payload };
     }
-    case GET_MEMOS: {
+    case EDIT_MEMO: {
       return { ...state, memos: { ...state.memos, [action.id]: action.payload } };
     }
     case ADD_MEMO: {

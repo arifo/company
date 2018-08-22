@@ -1,31 +1,32 @@
 import {
-  GET_COMPANIES,
+  EDIT_COMPANY,
   ADD_COMPANY,
   DELETE_COMPANY,
   TOGGLE_LISTENER_FETCHING,
   LOGOUT,
-  GET_ALL_COMPANIES
+  GET_COMPANIES
 } from '../actions/types';
 
 const initialState = {
   companies: {},
-  listerFetching: false
+  listerFetching: false,
+  lastModified: 0
 };
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case GET_ALL_COMPANIES: {
-      return { ...state, companies: action.payload };
-    }
     case GET_COMPANIES: {
+      return { ...state, companies: action.payload, lastModified: action.lastModified };
+    }
+    case ADD_COMPANY: {
+      return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
+    }
+    case EDIT_COMPANY: {
       return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
     }
     case DELETE_COMPANY: {
       const updatedCompanies = removeCompany(state.companies, action.id);
       return { ...state, companies: updatedCompanies };
-    }
-    case ADD_COMPANY: {
-      return { ...state, companies: { ...state.companies, [action.id]: action.payload } };
     }
     case TOGGLE_LISTENER_FETCHING: {
       return {

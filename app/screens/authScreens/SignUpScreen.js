@@ -124,9 +124,7 @@ class SignUpScreen extends Component {
   }
 }
 
-const mapStateToProps = state => ({
-  loggedIn: state.auth.loggedIn
-});
+const mapStateToProps = state => ({});
 
 export default connect(
   mapStateToProps,

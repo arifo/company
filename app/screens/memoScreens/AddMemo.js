@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ScrollView, View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { ScrollView, View, StyleSheet, Alert, TouchableOpacity, Picker } from 'react-native';
 import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -23,6 +23,7 @@ class AddMemo extends Component {
     this.state = {
       textInputValue: '',
       reminders: [],
+      interval: 120000,
       notificationsToDelete: ['', '', '', '', ''],
       isDateTimePickerVisible: { show: false, key: 0 }
     };
@@ -38,7 +39,7 @@ class AddMemo extends Component {
       }
     }
     if (type !== 'edit') {
-      this.setState({ reminders: [''] });
+      this.setState({ reminders: [] });
     }
   }
 
@@ -48,22 +49,19 @@ class AddMemo extends Component {
   };
 
   scheduleNotif(reminders, id, memo, company) {
-    const thenum = id.replace(/\D+/g, '').slice(0, 5);
+    const notificationId = id.replace(/\D+/g, '').slice(0, 5);
     const now = new Date(Date.now());
-    reminders.map((val, key) => {
-      const reminderDate = new Date(val);
-
-      if (now < reminderDate) {
-        PushNotification.localNotificationSchedule({
-          date: reminderDate,
-          title: company.name,
-          message: memo.title,
-          repeatType: 'minute',
-          id: `${thenum}${key}`,
-          tag: id,
-          group: company.id
-        });
-      }
+    reminders.filter(val => now < new Date(val)).forEach((val, key) => {
+      PushNotification.localNotificationSchedule({
+        date: new Date(val),
+        title: company.name,
+        message: memo.title,
+        repeatType: 'time',
+        repeatTime: this.state.interval,
+        id: `${notificationId}${key}`,
+        memoID: id,
+        companyID: company.id
+      });
     });
   }
 
@@ -98,10 +96,11 @@ class AddMemo extends Component {
 
   saveEditMemo = value => {
     const { memoID, companyID } = this.props.navigation.state.params;
-    const thenum = memoID.replace(/\D+/g, '').slice(0, 5);
+    const memo = this.props.memo[memoID];
+    const notificationId = memoID.replace(/\D+/g, '').slice(0, 5);
 
-    this.state.notificationsToDelete.map((val, key) => {
-      const nId = `${thenum}${key}`;
+    this.state.notificationsToDelete.forEach((val, key) => {
+      const nId = `${notificationId}${key}`;
       this.cancelNotif(nId);
     });
 
@@ -110,7 +109,8 @@ class AddMemo extends Component {
       this.state.reminders[this.state.reminders.length - 1] === ''
         ? _.dropRight(this.state.reminders)
         : this.state.reminders;
-    this.props.editMemo(value, memoID, reminders, lastModified, this.props.navigation);
+
+    this.props.editMemo(value, memo, reminders, lastModified, this.props.navigation);
 
     this.scheduleNotif(reminders, memoID, value, this.props.company[companyID]);
   };
@@ -125,9 +125,9 @@ class AddMemo extends Component {
           onPress: () => {
             const { memoID } = this.props.navigation.state.params;
             const memoToDelete = this.props.memo[memoID];
-            const thenum = memoID.replace(/\D+/g, '').slice(0, 5);
+            const notificationId = memoID.replace(/\D+/g, '').slice(0, 5);
             this.state.notificationsToDelete.map((val, key) => {
-              const nId = `${thenum}${key}`;
+              const nId = `${notificationId}${key}`;
               this.cancelNotif(nId);
             });
             this.props.deleteMemo(memoToDelete, this.props.navigation);
@@ -232,8 +232,11 @@ class AddMemo extends Component {
         <FormLabel>Remider</FormLabel>
         {this.state.reminders.map((reminder, key) => this.renderReminder(reminder, key))}
         <DateTimePicker
+          is24Hour
+          date={new Date()}
           isVisible={this.state.isDateTimePickerVisible.show}
           mode="datetime"
+          minimumDate={new Date(Date.now())}
           onCancel={this.hideDateTimePicker}
           onConfirm={date => {
             const newArray = this.state.reminders;
@@ -264,7 +267,20 @@ class AddMemo extends Component {
             <Icon name="close" type="simple-line-icon" size={28} color={'red'} />
           </View>
         )}
-
+        <FormLabel>Notification Interval</FormLabel>
+        <View style={styles.addReminderContainer}>
+          <Picker
+            selectedValue={this.state.interval}
+            style={{ height: 50, width: 180 }}
+            onValueChange={(interval, i) => this.setState({ interval })}
+          >
+            <Picker.Item label="1 minute" value={1 * 60000} />
+            <Picker.Item label="2 minutes" value={2 * 60000} />
+            <Picker.Item label="10 minutes" value={10 * 60000} />
+            <Picker.Item label="30 minutes" value={30 * 60000} />
+            <Picker.Item label="1 hour" value={60 * 60000} />
+          </Picker>
+        </View>
         <Button
           title="Save Memo"
           buttonStyle={styles.button}
@@ -285,7 +301,7 @@ class AddMemo extends Component {
 
   render() {
     const { memoID } = this.props.navigation.state.params;
-
+    console.log(this.props.memo[memoID].reminders);
     return (
       <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">

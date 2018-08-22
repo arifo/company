@@ -56,14 +56,10 @@ class AddCompany extends Component {
 
   saveEditCompany = value => {
     const { companyID } = this.props.navigation.state.params;
-    const { id } = this.props.companies[companyID];
+    const company = this.props.companies[companyID];
 
     const lastModified = moment().valueOf();
-    this.props.editCompany(value, id, lastModified);
-    this.props.navigation.replace('ViewCompany', {
-      title: value.name,
-      companyID: id
-    });
+    this.props.editCompany(value, company, lastModified, this.props.navigation);
   };
 
   saveNewCompany = value => {
@@ -76,14 +72,10 @@ class AddCompany extends Component {
         memos: {},
         user: firebase.auth().currentUser.uid,
         createdAt: moment().valueOf(),
-        lastModified: ''
+        lastModified: '',
+        cacheTimestamp: moment().valueOf()
       };
-      this.props.addCompany(companyInfo, uuid);
-
-      this.props.navigation.replace('ViewCompany', {
-        title: companyInfo.name,
-        companyID: companyInfo.id
-      });
+      this.props.addCompany(companyInfo, uuid, this.props.navigation);
     });
   };
 

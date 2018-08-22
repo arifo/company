@@ -3,20 +3,50 @@ import { ScrollView, Text } from 'react-native';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import _ from 'lodash';
-import ViewMoreText from 'react-native-view-more-text';
+import PushNotification from 'react-native-push-notification';
 import Communications from 'react-native-communications';
 
 import Container from '../../components/Container';
 import CustomCard from '../../components/CustomCard';
-import ViewText from '../../components/ViewText';
+import ViewMoreText from '../../components/ViewText';
+import { editMemo, handleDueReminders } from '../../redux/actions';
 
 class ViewMemo extends Component {
+  constructor(props) {
+    super(props);
+    const { memoID } = this.props.navigation.state.params;
+    this.props.handleDueReminders(this.props.memo[memoID]);
+  }
+
+  componentDidMount() {
+    const { type, notifID } = this.props.navigation.state.params;
+    if (type === 'notification') {
+      console.log('comming from push notification', notifID);
+      this.cancelNotif(notifID);
+    }
+  }
+  cancelNotif = id => {
+    PushNotification.cancelLocalNotifications({ id });
+  };
   handlePhone = phone => Communications.phonecall(phone, true);
 
   handleEmail = email => Communications.email([email], null, null, null, null);
 
   renderReminder = (reminder, key) => {
-    const isDue = { color: moment() < moment(reminder) ? 'green' : 'red' };
+    const isDue = { color: 'green' };
+    const formatedDate = moment(reminder).format('M/DD/YYYY HH:mm');
+    const timeAgo = moment().to(moment(reminder));
+    const text = `${timeAgo}  (${formatedDate})`;
+    return (
+      <Text key={key} style={{ fontWeight: '700' }}>
+        {`${key + 1}. `}
+        <Text style={isDue}>{text}</Text>
+      </Text>
+    );
+  };
+
+  renderPastReminder = (reminder, key) => {
+    const isDue = { color: 'red' };
     const formatedDate = moment(reminder).format('M/DD/YYYY HH:mm');
     const timeAgo = moment().to(moment(reminder));
     const text = `${timeAgo}  (${formatedDate})`;
@@ -55,8 +85,15 @@ class ViewMemo extends Component {
   render() {
     const { memoID } = this.props.navigation.state.params;
 
-    const { title, note, contact, reminders, createdAt, lastModified } = this.props.memo[memoID];
-
+    const {
+      title,
+      note,
+      contact,
+      reminders,
+      createdAt,
+      lastModified,
+      oldReminders
+    } = this.props.memo[memoID];
     const selectedContact = _.filter(this.props.employees, employee => employee.id === contact.id);
 
     return (
@@ -64,22 +101,20 @@ class ViewMemo extends Component {
         <ScrollView style={{ width: '100%' }}>
           <CustomCard label="Title" text={title} />
           <CustomCard label="Note">
-            <ViewMoreText
-              numberOfLines={5}
-              renderViewMore={onPress => <ViewText onPress={onPress} text="View more" />}
-              renderViewLess={onPress => <ViewText onPress={onPress} text="View less" />}
-              textStyle={{ textAlign: 'justify' }}
-            >
-              <Text>{note}</Text>
-            </ViewMoreText>
+            <ViewMoreText numberOfLines={5} text={note} />
           </CustomCard>
 
           {this.renderContact(selectedContact[0])}
 
-          <CustomCard label="Reminders">
-            {reminders.map(this.renderReminder)}
-            {reminders.length === 0 && <Text>reminders are not set...</Text>}
+          <CustomCard label="Upcoming reminders">
+            {reminders.filter(q => q !== '').map(this.renderReminder)}
+            {reminders.filter(q => q !== '').length === 0 && <Text>reminders are not set...</Text>}
           </CustomCard>
+          {(oldReminders || []).length > 0 && (
+            <CustomCard label="Past reminders">
+              {(oldReminders || []).filter(q => q !== '').map(this.renderPastReminder)}
+            </CustomCard>
+          )}
           <CustomCard label="Created">
             <Text>{moment(createdAt).format('M/DD/YYYY, HH:mm:ss')}</Text>
           </CustomCard>
@@ -101,4 +136,7 @@ const mapStateToProps = state => ({
   employees: state.employee.employees
 });
 
-export default connect(mapStateToProps)(ViewMemo);
+export default connect(
+  mapStateToProps,
+  { editMemo, handleDueReminders }
+)(ViewMemo);

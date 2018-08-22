@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Dimensions, StyleSheet } from 'react-native';
+import { View, ScrollView, Dimensions } from 'react-native';
 import { Button, Text, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import moment from 'moment';
 import SegmentControl from 'react-native-segment-controller';
-import ViewMoreText from 'react-native-view-more-text';
+// import ViewMoreText from 'react-native-view-more-text';
 
 import {
   getEmployees,
@@ -20,7 +20,7 @@ import CustomCard from '../../components/CustomCard';
 import AddImageBox from '../../components/AddImageBox';
 import CustomFlatList from '../../components/CustomFlatList';
 import ImagePreview from '../../components/ImagePreview';
-import ViewText from '../../components/ViewText';
+import ViewMoreText from '../../components/ViewText';
 
 const deviceHeight = Dimensions.get('screen').height;
 const deviceWidth = Dimensions.get('screen').width;
@@ -45,17 +45,17 @@ class ViewCompany extends Component {
   onEmployeeSelect = item => {
     const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('ViewEmployee', {
+      companyID,
       title: item.name,
-      employeeID: item.id,
-      companyID
+      employeeID: item.id
     });
   };
 
   onAddEmployee = () => {
     const { companyID } = this.props.navigation.state.params;
     this.props.navigation.navigate('AddEmployee', {
-      title: 'New employee',
-      companyID
+      companyID,
+      title: 'New employee'
     });
   };
 
@@ -132,7 +132,7 @@ class ViewCompany extends Component {
     const data = _.chain(this.props.memos)
       .pickBy(val => val.companyID === companyID)
       .map(val => val)
-      .orderBy(['lastModified', 'createdAt'], [this.state.sortKey])
+      .orderBy(['createdAt'], [this.state.sortKey])
       .value();
     return (
       <View style={styles.tab.container}>
@@ -199,14 +199,8 @@ class ViewCompany extends Component {
         >
           <CustomCard label="Name" textStyle={{ fontSize: 20, fontWeight: '500' }} text={name} />
           <CustomCard label="Description">
-            <ViewMoreText
-              numberOfLines={5}
-              renderViewMore={onPress => <ViewText onPress={onPress} text="View more" />}
-              renderViewLess={onPress => <ViewText onPress={onPress} text="View less" />}
-              textStyle={{ textAlign: 'justify' }}
-            >
-              <Text>{description}</Text>
-            </ViewMoreText>
+            <ViewMoreText numberOfLines={5} text={description} />
+            {/* <Text>{`${description}`}></Text> */}
           </CustomCard>
 
           <CustomCard>

@@ -70,7 +70,7 @@ class ForgotPassword extends React.Component {
           <Button
             title="Cancel"
             buttonStyle={styles.cardButton}
-            onPress={_ => this.props.navigation.goBack()}
+            onPress={() => this.props.navigation.goBack()}
           />
         </ScrollView>
       </Container>
@@ -78,9 +78,7 @@ class ForgotPassword extends React.Component {
   }
 }
 
-const mapStateToProps = state => ({
-  loggedIn: state.auth.loggedIn
-});
+const mapStateToProps = state => ({});
 
 export default connect(
   mapStateToProps,

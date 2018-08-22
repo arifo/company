@@ -1,9 +1,9 @@
 import {
   GET_EMPLOYEES,
   ADD_EMPLOYEE,
+  EDIT_EMPLOYEE,
   DELETE_EMPLOYEE,
-  LOGOUT,
-  GET_ALL_EMPLOYEES
+  LOGOUT
 } from '../actions/types';
 
 const initialState = {
@@ -12,10 +12,10 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case GET_ALL_EMPLOYEES: {
+    case GET_EMPLOYEES: {
       return { ...state, employees: action.payload };
     }
-    case GET_EMPLOYEES: {
+    case EDIT_EMPLOYEE: {
       return { ...state, employees: { ...state.employees, [action.id]: action.payload } };
     }
     case ADD_EMPLOYEE: {

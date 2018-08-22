@@ -30,7 +30,6 @@ class ViewEmployee extends Component {
       lastModified,
       avatar
     } = this.props.employee[employeeID];
-
     return (
       <Container style={{ flex: 1, alignItems: 'center', paddingBottom: 20 }}>
         <ScrollView style={{ width: '100%' }}>
