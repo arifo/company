@@ -234,7 +234,7 @@ class AddMemo extends Component {
         <FormLabel>Remider</FormLabel>
         {this.state.reminders.map((reminder, key) => this.renderReminder(reminder, key))}
         <DateTimePicker
-          is24Hour
+          is24Hour={false}
           date={new Date()}
           isVisible={this.state.isDateTimePickerVisible.show}
           mode="datetime"
