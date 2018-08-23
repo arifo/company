@@ -62,7 +62,6 @@ export const getData = () => dispatch => {
       });
       const lastModifiedCompany = _.orderBy(obj, ['cacheTimestamp'], ['desc']);
       const lastModified = lastModifiedCompany[0].cacheTimestamp;
-
       dispatch({ type: GET_COMPANIES, payload: obj, lastModified });
     });
 

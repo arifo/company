@@ -58,6 +58,8 @@ class AddMemo extends Component {
         message: memo.title,
         repeatType: 'time',
         repeatTime: this.state.interval,
+        vibrate: true,
+        vibration: 500,
         id: `${notificationId}${key}`,
         memoID: id,
         companyID: company.id

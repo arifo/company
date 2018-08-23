@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ActivityIndicator, PlatformIOS, Alert } from 'react-native';
+import { ActivityIndicator, PlatformIOS } from 'react-native';
 import firebase from 'firebase';
-import NotifService from '../memoScreens/notification/NotifService';
 
 import { loginAction, alreadyLoggedIn, getNotificationMemo } from '../../redux/actions';
 import Container from '../../components/Container';
@@ -18,7 +17,6 @@ class LoadingScreen extends Component {
     this.unsubscriber = firebase.auth().onAuthStateChanged(user => {
       if (user) {
         console.log('firebase current User exists');
-        // this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
         this.props.alreadyLoggedIn(navigation);
         return;
       }
@@ -31,21 +29,6 @@ class LoadingScreen extends Component {
       this.unsubscriber();
     }
   }
-
-  // onNotif(notif) {
-  //   const { navigation } = this.props;
-  //   console.log('notification', notif);
-  //   if (this.props.loggedIn) {
-  //     const memo = this.props.memo[notif.memoID];
-  //     const company = this.props.company[notif.companyID];
-  //     this.props.getNotificationMemo(memo, company, notif, navigation);
-  //   }
-  // }
-
-  // onRegister(token) {
-  //   Alert.alert('Registered !', JSON.stringify(token));
-  //   this.setState({ registerToken: token.token, gcmRegistered: true });
-  // }
 
   render() {
     console.log('loading screen state', this.props.state);

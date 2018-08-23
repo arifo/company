@@ -6,19 +6,23 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  BackHandler
+  BackHandler,
+  AppState
 } from 'react-native';
 import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import AlphabetListView from 'react-native-alphabetlistview';
+// import PushNotification from 'react-native-push-notification';
 
 import { logoutAction, handleCaching, getNotificationMemo } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
 import HeaderButton from '../components/HeaderButton';
-import NotifService from '../screens/memoScreens/notification/NotifService';
+import PushService from '../config/PushService';
+
+// PushService.configure();
 
 class Companies extends Component {
   constructor(props) {
@@ -30,13 +34,15 @@ class Companies extends Component {
       value: '',
       alphabetList: false,
       searchNoResult: false,
-      searchFocused: false
+      searchFocused: false,
+      appState: AppState.currentState
     };
   }
 
   async componentDidMount() {
+    AppState.addEventListener('change', this.onAppStateChange);
     this.props.handleCaching();
-    this.notif = new NotifService(this.onRegister.bind(this), this.onNotif.bind(this));
+    this.notif = new PushService(this.onNotif.bind(this));
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!this.state.searchFocused) {
         return false;
@@ -48,27 +54,24 @@ class Companies extends Component {
   }
 
   componentWillUnmount() {
+    AppState.removeEventListener('change', this.onAppStateChange);
     this.backHandler.remove();
   }
 
+  onAppStateChange = nextAppState => {
+    if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
+      console.log('App has come to the foreground!');
+    }
+    this.setState({ appState: nextAppState });
+  };
+
   onNotif(notif) {
     const { navigation, memos, companies } = this.props;
-    console.log('notification', notif);
+    console.log('NOTIFICATION: ', notif);
     const memo = memos[notif.memoID];
     const company = companies[notif.companyID];
-    // navigation.navigate('ViewMemo', {
-    //   title: memo.title,
-    //   memoID: memo.id,
-    //   companyID: company.id,
-    //   notifID: notif.id,
-    //   type: 'notification'
-    // });
-    this.props.getNotificationMemo(memo, company, notif, navigation);
-  }
 
-  onRegister(token) {
-    Alert.alert('Registered !', JSON.stringify(token));
-    this.setState({ registerToken: token.token, gcmRegistered: true });
+    this.props.getNotificationMemo(memo, company, notif, navigation);
   }
 
   onChangeText = value => {
@@ -222,7 +225,7 @@ class Companies extends Component {
 
   render() {
     const { companies } = this.props;
-    console.log('render', companies);
+    console.log('render', this.state.appState);
     let data = _.chain(companies)
       .orderBy([item => item.name.toLowerCase()], [this.state.sortKey])
       .filter(item => {
