@@ -225,7 +225,7 @@ class Companies extends Component {
 
   render() {
     const { companies } = this.props;
-    console.log('render', this.state.appState);
+
     let data = _.chain(companies)
       .orderBy([item => item.name.toLowerCase()], [this.state.sortKey])
       .filter(item => {
