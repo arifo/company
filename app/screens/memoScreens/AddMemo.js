@@ -306,7 +306,6 @@ class AddMemo extends Component {
 
   render() {
     const { memoID } = this.props.navigation.state.params;
-    console.log(this.props.memo[memoID].reminders);
     return (
       <Container style={{ alignItems: 'center' }}>
         <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="always">

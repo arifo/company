@@ -9,7 +9,7 @@ import {
 
 const initialState = {
   companies: {},
-  listerFetching: false,
+  isFetching: false,
   lastModified: 0
 };
 
@@ -31,7 +31,7 @@ export default (state = initialState, action) => {
     case TOGGLE_LISTENER_FETCHING: {
       return {
         ...state,
-        listerFetching: action.payload
+        isFetching: action.payload
       };
     }
     case LOGOUT:

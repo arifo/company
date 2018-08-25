@@ -6,8 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  BackHandler,
-  AppState
+  BackHandler
 } from 'react-native';
 import { Header, Icon, SearchBar, Text } from 'react-native-elements';
 import { connect } from 'react-redux';
@@ -15,7 +14,7 @@ import _ from 'lodash';
 import AlphabetListView from 'react-native-alphabetlistview';
 // import PushNotification from 'react-native-push-notification';
 
-import { logoutAction, handleCaching, getNotificationMemo } from '../redux/actions';
+import { logoutAction, getData, getNotificationMemo, unsubscribe } from '../redux/actions';
 
 import Container from '../components/Container';
 import AddImageBox from '../components/AddImageBox';
@@ -34,14 +33,12 @@ class Companies extends Component {
       value: '',
       alphabetList: false,
       searchNoResult: false,
-      searchFocused: false,
-      appState: AppState.currentState
+      searchFocused: false
     };
   }
 
-  async componentDidMount() {
-    AppState.addEventListener('change', this.onAppStateChange);
-    this.props.handleCaching();
+  componentDidMount() {
+    this.props.getData();
     this.notif = new PushService(this.onNotif.bind(this));
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!this.state.searchFocused) {
@@ -54,16 +51,12 @@ class Companies extends Component {
   }
 
   componentWillUnmount() {
-    AppState.removeEventListener('change', this.onAppStateChange);
+    this.props.unsubscribe('company');
+    this.props.unsubscribe('employee');
+    this.props.unsubscribe('memo');
+    console.log('component unmounted unsubbed');
     this.backHandler.remove();
   }
-
-  onAppStateChange = nextAppState => {
-    if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
-      console.log('App has come to the foreground!');
-    }
-    this.setState({ appState: nextAppState });
-  };
 
   onNotif(notif) {
     const { navigation, memos, companies } = this.props;
@@ -225,7 +218,7 @@ class Companies extends Component {
 
   render() {
     const { companies } = this.props;
-
+    console.log('state', this.props.state);
     let data = _.chain(companies)
       .orderBy([item => item.name.toLowerCase()], [this.state.sortKey])
       .filter(item => {
@@ -304,7 +297,7 @@ class Companies extends Component {
             underlayColor="transparent"
           />
         </View>
-        {this.props.listerFetching && (
+        {this.props.isFetching && (
           <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator size={PlatformIOS ? 'large' : 50} />
           </View>
@@ -316,15 +309,15 @@ class Companies extends Component {
 }
 
 const mapStateToProps = state => ({
-  // loggedIn: state.auth.loggedIn,
+  state,
   companies: state.company.companies,
   employees: state.employee.employees,
   memos: state.memo.memos,
-  listerFetching: state.company.listerFetching,
+  isFetching: state.company.isFetching,
   auth: state.auth
 });
 
 export default connect(
   mapStateToProps,
-  { logoutAction, handleCaching, getNotificationMemo }
+  { logoutAction, getData, getNotificationMemo, unsubscribe }
 )(Companies);
