@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import moment from 'moment';
 import Slider from 'react-native-slider';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import ImagePicker from 'react-native-image-picker';
 
 import { connect } from 'react-redux';

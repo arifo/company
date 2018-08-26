@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@ptomasroos/react-native-multi-slider": "^1.0.0",
-    "firebase": "5.0.3",
     "formik": "^1.0.1",
     "immutability-helper": "^2.7.1",
     "lodash": "^4.17.10",
@@ -21,6 +20,7 @@
     "react-native-communications": "^2.2.1",
     "react-native-datepicker": "^1.7.2",
     "react-native-elements": "^0.19.1",
+    "react-native-firebase": "^4.3.8",
     "react-native-image-picker": "^0.26.10",
     "react-native-image-preview": "^0.3.1",
     "react-native-image-zoom-viewer": "^2.2.14",

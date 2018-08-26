@@ -3,6 +3,10 @@ package com.company;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import io.invertase.firebase.RNFirebasePackage;
+import io.invertase.firebase.firestore.RNFirebaseFirestorePackage;
+import io.invertase.firebase.auth.RNFirebaseAuthPackage;
+import io.invertase.firebase.storage.RNFirebaseStoragePackage;
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 import com.imagepicker.ImagePickerPackage;
 import io.github.traviskn.rnuuidgenerator.RNUUIDGeneratorPackage;
@@ -27,6 +31,10 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNFirebasePackage(),
+            new RNFirebaseFirestorePackage(),
+            new RNFirebaseAuthPackage(),
+            new RNFirebaseStoragePackage(),
             new ReactNativePushNotificationPackage(),
             new ImagePickerPackage(),
             new RNUUIDGeneratorPackage(),

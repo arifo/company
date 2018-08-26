@@ -1,4 +1,4 @@
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import moment from 'moment';
 import { NavigationActions, StackActions } from 'react-navigation';
 

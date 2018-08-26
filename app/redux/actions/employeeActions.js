@@ -1,5 +1,6 @@
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import { StackActions } from 'react-navigation';
+import { NetInfo } from 'react-native';
 import { db } from '../../App';
 
 import { ADD_EMPLOYEE, EDIT_EMPLOYEE, DELETE_EMPLOYEE } from './types';
@@ -10,9 +11,7 @@ export const addEmployee = (employeeInfo, uuid, navigation) => async dispatch =>
   let info = Object.assign({}, employeeInfo);
 
   if (info.avatar) {
-    const avatar = await uploadImage(info.avatar, uuid, info.companyID).catch(error => {
-      console.log('upload error', error);
-    });
+    const avatar = await uploadImage(info.avatar, uuid, info.companyID);
     info = Object.assign(info, { avatar });
   }
 
@@ -71,12 +70,23 @@ export const editEmployee = (
     lastModified: timestamp,
     avatar: avatarUri
   };
+  let avatar = '';
   if (avatarUri) {
-    const avatar = await uploadImage(avatarUri, employee.id, employee.companyID).catch(error => {
-      console.log('upload error', error);
+    await NetInfo.isConnected.fetch().then(async isConnected => {
+      if (isConnected) {
+        await uploadImage(avatarUri, employee.id, employee.companyID).then(ava => {
+          console.log('asdfas', ava);
+          avatar = ava;
+          return avatar;
+        });
+        console.log('avatar inside isconnetdet', avatar);
+      }
+      avatar = avatarUri;
     });
+
     data = Object.assign(data, { avatar });
   }
+  console.log('avatar', avatar);
 
   docRef.set(data, { merge: true });
 
@@ -88,24 +98,23 @@ export const editEmployee = (
 };
 
 const uploadImage = async (uri, imageName, companyID) => {
-  const response = await fetch(uri);
-  const blob = await response.blob();
-  const ref = firebase
+  let avatar = '';
+  await firebase
     .storage()
     .ref()
-    .child(`${firebase.auth().currentUser.uid}/${companyID}/${imageName}`);
-  const uploadTask = ref.put(blob);
-
-  return new Promise((res, rej) => {
-    uploadTask.then(() =>
-      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-        if (downloadURL === undefined) {
-          rej();
-        }
-        res(downloadURL);
-      })
-    );
-  });
+    .child(`${firebase.auth().currentUser.uid}/${companyID}/${imageName}`)
+    .putFile(uri)
+    .then(result => {
+      console.log('result', result);
+      if (result.state === 'success') {
+        avatar = result.downloadURL;
+        return avatar;
+      }
+    })
+    .catch(error => {
+      console.log('upload error', error);
+    });
+  return avatar;
 };
 
 export const deleteAvatar = avatar => dispatch => {

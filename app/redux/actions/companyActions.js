@@ -1,4 +1,4 @@
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import { db } from '../../App';
 import {
   GET_COMPANIES,
@@ -42,19 +42,19 @@ const getCompanies = () => dispatch => {
       });
       dispatch({ type: GET_COMPANIES, payload: obj });
 
-      querySnapshot.docChanges().forEach(changed => {
-        if (changed.type === 'added') {
-          // dispatch({ type: ADD_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
-        }
+      // querySnapshot.docChanges().forEach(changed => {
+      //   if (changed.type === 'added') {
+      //     // dispatch({ type: ADD_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
+      //   }
 
-        if (changed.type === 'modified') {
-          dispatch({ type: EDIT_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
-        }
+      //   if (changed.type === 'modified') {
+      //     dispatch({ type: EDIT_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
+      //   }
 
-        if (changed.type === 'removed') {
-          dispatch({ type: DELETE_COMPANY, id: changed.doc.id });
-        }
-      });
+      //   if (changed.type === 'removed') {
+      //     dispatch({ type: DELETE_COMPANY, id: changed.doc.id });
+      //   }
+      // });
       const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
       console.log(`Company Data came from ${source}`);
       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
@@ -73,17 +73,17 @@ const getEmployees = () => dispatch => {
       });
       dispatch({ type: GET_EMPLOYEES, payload: obj });
 
-      querySnapshot.docChanges().forEach(changed => {
-        if (changed.type === 'added') {
-          console.log('employee add type');
-        }
-        if (changed.type === 'modified') {
-          dispatch({ type: EDIT_EMPLOYEE, id: changed.doc.id, payload: changed.doc.data() });
-        }
-        if (changed.type === 'removed') {
-          dispatch({ type: DELETE_EMPLOYEE, id: changed.doc.id });
-        }
-      });
+      // querySnapshot.docChanges().forEach(changed => {
+      //   if (changed.type === 'added') {
+      //     console.log('employee add type');
+      //   }
+      //   if (changed.type === 'modified') {
+      //     dispatch({ type: EDIT_EMPLOYEE, id: changed.doc.id, payload: changed.doc.data() });
+      //   }
+      //   if (changed.type === 'removed') {
+      //     dispatch({ type: DELETE_EMPLOYEE, id: changed.doc.id });
+      //   }
+      // });
       const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
       console.log(`EmployeE Data came from ${source}`);
     });
@@ -97,21 +97,21 @@ const getMemos = () => dispatch => {
     .onSnapshot(querySnapshot => {
       console.log('in getMemo');
       const obj = {};
-      querySnapshot.forEach(doc => {
-        Object.assign(obj, { [doc.id]: doc.data() });
-      });
-      dispatch({ type: GET_MEMOS, payload: obj });
-      querySnapshot.docChanges().forEach(changed => {
-        if (changed.type === 'added') {
-          console.log('type add memo');
-        }
-        if (changed.type === 'modified') {
-          dispatch({ type: EDIT_MEMO, id: changed.doc.id, payload: changed.doc.data() });
-        }
-        if (changed.type === 'removed') {
-          dispatch({ type: DELETE_MEMO, id: changed.doc.id });
-        }
-      });
+      // querySnapshot.forEach(doc => {
+      //   Object.assign(obj, { [doc.id]: doc.data() });
+      // });
+      // dispatch({ type: GET_MEMOS, payload: obj });
+      // querySnapshot.docChanges().forEach(changed => {
+      //   if (changed.type === 'added') {
+      //     console.log('type add memo');
+      //   }
+      //   if (changed.type === 'modified') {
+      //     dispatch({ type: EDIT_MEMO, id: changed.doc.id, payload: changed.doc.data() });
+      //   }
+      //   if (changed.type === 'removed') {
+      //     dispatch({ type: DELETE_MEMO, id: changed.doc.id });
+      //   }
+      // });
       const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
       console.log(`MEMO Data came from ${source}`);
       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });

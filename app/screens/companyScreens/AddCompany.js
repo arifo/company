@@ -5,7 +5,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { connect } from 'react-redux';
 import UUIDGenerator from 'react-native-uuid-generator';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import moment from 'moment';
 
 import { addCompany, editCompany, deleteCompany } from '../../redux/actions';

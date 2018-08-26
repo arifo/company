@@ -4,7 +4,7 @@ import { Button, Card, FormLabel, Text, Icon } from 'react-native-elements';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { connect } from 'react-redux';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import ModalSelector from 'react-native-modal-selector';
 import UUIDGenerator from 'react-native-uuid-generator';
 import moment from 'moment';

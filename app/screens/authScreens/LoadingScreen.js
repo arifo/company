@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { ActivityIndicator, PlatformIOS } from 'react-native';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 
 import { loginAction, alreadyLoggedIn, getNotificationMemo } from '../../redux/actions';
 import Container from '../../components/Container';

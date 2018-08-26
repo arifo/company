@@ -1,4 +1,4 @@
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import { Alert } from 'react-native';
 
 import { db } from '../../App';
@@ -8,7 +8,7 @@ import { LOGIN, LOGOUT, SIGNUP, ALREADY_LOGGED_IN } from './types';
 export const signUpAction = (values, bag, navigation) => async dispatch => {
   const { email, password } = values;
   try {
-    await firebase.auth().createUserWithEmailAndPassword(email, password);
+    await firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password);
 
     const uid = firebase.auth().currentUser.uid;
     db.collection('users')
@@ -36,7 +36,7 @@ export const loginAction = (values, bag, navigation) => dispatch => {
 
   firebase
     .auth()
-    .signInWithEmailAndPassword(email, password)
+    .signInAndRetrieveDataWithEmailAndPassword(email, password)
     .then(() => {
       db.collection('users')
         .where('email', '==', email)
