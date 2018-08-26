@@ -97,10 +97,10 @@ const getMemos = () => dispatch => {
     .onSnapshot(querySnapshot => {
       console.log('in getMemo');
       const obj = {};
-      // querySnapshot.forEach(doc => {
-      //   Object.assign(obj, { [doc.id]: doc.data() });
-      // });
-      // dispatch({ type: GET_MEMOS, payload: obj });
+      querySnapshot.forEach(doc => {
+        Object.assign(obj, { [doc.id]: doc.data() });
+      });
+      dispatch({ type: GET_MEMOS, payload: obj });
       // querySnapshot.docChanges().forEach(changed => {
       //   if (changed.type === 'added') {
       //     console.log('type add memo');
