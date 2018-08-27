@@ -35,17 +35,6 @@ const iosConfig = {
 firebase.initializeApp(androidConfig);
 const settings = { timestampsInSnapshots: true, enablePersistence: true };
 firebase.firestore().settings(settings);
-// firebase
-//   .firestore()
-//   .enablePersistence()
-//   .catch(err => {
-//     if (err.code == 'failed-precondition') {
-//       console.log('error persistence failed-precondition', err);
-//     } else if (err.code == 'unimplemented') {
-//       console.log('error persistence unimplemented', err);
-//     }
-//   });
-// firebase.firestore.setLogLevel('debug');
 export const db = firebase.firestore();
 
 const middleWare = [thunk];

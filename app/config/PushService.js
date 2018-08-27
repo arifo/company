@@ -6,7 +6,6 @@ export default class PushService {
   }
 
   configure(onNotification) {
-    console.log('configuer');
     PushNotification.configure({
       // (required) Called when a remote or local notification is opened or received
       onNotification, //this._onNotification,

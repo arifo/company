@@ -150,6 +150,7 @@ class AddMemo extends Component {
   canAddReminder = () =>
     this.state.reminders.length <= 4 &&
     this.state.reminders[this.state.reminders.length - 1] !== '';
+
   handleAddReminder = () => {
     const newArray = this.state.reminders;
     newArray.push('');
@@ -242,7 +243,6 @@ class AddMemo extends Component {
           onCancel={this.hideDateTimePicker}
           onConfirm={date => {
             if (date > new Date()) {
-              console.log('date picker date', date);
               const newArray = this.state.reminders;
               newArray[this.state.isDateTimePickerVisible.key] = date.toISOString();
               this.setState({ reminders: newArray });

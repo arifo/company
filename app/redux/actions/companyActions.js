@@ -7,11 +7,7 @@ import {
   ADD_COMPANY,
   EDIT_COMPANY,
   DELETE_COMPANY,
-  TOGGLE_LISTENER_FETCHING,
-  DELETE_MEMO,
-  DELETE_EMPLOYEE,
-  EDIT_MEMO,
-  EDIT_EMPLOYEE
+  TOGGLE_IS_FETCHING
 } from './types';
 
 const listeners = {
@@ -31,97 +27,60 @@ export const getData = () => dispatch => {
 };
 
 const getCompanies = () => dispatch => {
-  dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: true });
+  dispatch({ type: TOGGLE_IS_FETCHING, payload: true });
   listeners.company = db
     .collection('companies')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot({ includeMetadataChanges: true }, querySnapshot => {
       const obj = {};
+
       querySnapshot.forEach(doc => {
         Object.assign(obj, { [doc.id]: doc.data() });
       });
+
       dispatch({ type: GET_COMPANIES, payload: obj });
-
-      // querySnapshot.docChanges().forEach(changed => {
-      //   if (changed.type === 'added') {
-      //     // dispatch({ type: ADD_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
-      //   }
-
-      //   if (changed.type === 'modified') {
-      //     dispatch({ type: EDIT_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
-      //   }
-
-      //   if (changed.type === 'removed') {
-      //     dispatch({ type: DELETE_COMPANY, id: changed.doc.id });
-      //   }
-      // });
-      const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
-      console.log(`Company Data came from ${source}`);
-      dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
+      dispatch({ type: TOGGLE_IS_FETCHING, payload: false });
     });
 };
 
 const getEmployees = () => dispatch => {
-  dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: true });
+  dispatch({ type: TOGGLE_IS_FETCHING, payload: true });
   listeners.employee = db
     .collection('employees')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot(querySnapshot => {
       const obj = {};
+
       querySnapshot.forEach(doc => {
         Object.assign(obj, { [doc.id]: doc.data() });
       });
-      dispatch({ type: GET_EMPLOYEES, payload: obj });
 
-      // querySnapshot.docChanges().forEach(changed => {
-      //   if (changed.type === 'added') {
-      //     console.log('employee add type');
-      //   }
-      //   if (changed.type === 'modified') {
-      //     dispatch({ type: EDIT_EMPLOYEE, id: changed.doc.id, payload: changed.doc.data() });
-      //   }
-      //   if (changed.type === 'removed') {
-      //     dispatch({ type: DELETE_EMPLOYEE, id: changed.doc.id });
-      //   }
-      // });
-      const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
-      console.log(`EmployeE Data came from ${source}`);
+      dispatch({ type: GET_EMPLOYEES, payload: obj });
+      dispatch({ type: TOGGLE_IS_FETCHING, payload: false });
     });
 };
 
 const getMemos = () => dispatch => {
-  dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: true });
+  dispatch({ type: TOGGLE_IS_FETCHING, payload: true });
   listeners.memo = db
     .collection('memos')
     .where('user', '==', firebase.auth().currentUser.uid)
     .onSnapshot(querySnapshot => {
-      console.log('in getMemo');
       const obj = {};
+
       querySnapshot.forEach(doc => {
         Object.assign(obj, { [doc.id]: doc.data() });
       });
+
       dispatch({ type: GET_MEMOS, payload: obj });
-      // querySnapshot.docChanges().forEach(changed => {
-      //   if (changed.type === 'added') {
-      //     console.log('type add memo');
-      //   }
-      //   if (changed.type === 'modified') {
-      //     dispatch({ type: EDIT_MEMO, id: changed.doc.id, payload: changed.doc.data() });
-      //   }
-      //   if (changed.type === 'removed') {
-      //     dispatch({ type: DELETE_MEMO, id: changed.doc.id });
-      //   }
-      // });
-      const source = querySnapshot.metadata.fromCache ? 'local cache' : 'server';
-      console.log(`MEMO Data came from ${source}`);
-      dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
+      dispatch({ type: TOGGLE_IS_FETCHING, payload: false });
     });
 };
 
 export const unsubscribe = listenerName => {
   listeners[listenerName]();
   return {
-    type: TOGGLE_LISTENER_FETCHING
+    type: TOGGLE_IS_FETCHING
   };
 };
 
@@ -213,107 +172,3 @@ export const editCompany = (values, company, timestamp, navigation) => dispatch 
     title: values.name
   });
 };
-
-// export const toggleListenerFetching = fetching => ({
-//   type: TOGGLE_LISTENER_FETCHING,
-//   payload: fetching
-// });
-
-// export const getCompanies = () => dispatch => {
-//   console.log('in getCompanies');
-//   listeners.company = db
-//     .collection('companies')
-//     .where('user', '==', firebase.auth().currentUser.uid)
-//     .onSnapshot({ includeMetadataChanges: true }, querySnapshot => {
-//       console.log('getCompanies');
-//       const obj = {};
-//       querySnapshot.docChanges().forEach(async changed => {
-//         if (changed.type === 'added') {
-//           querySnapshot.forEach(doc => {
-//             Object.assign(obj, { [doc.id]: doc.data() });
-//           });
-//           // AsyncStorage.setItem('companies', JSON.stringify(obj));
-//           const lastModifiedCompany = _.orderBy(obj, ['cacheTimestamp'], ['desc']);
-//           // AsyncStorage.setItem('timestamp', lastModifiedCompany[0].cacheTimestamp);
-//           const lastModified = lastModifiedCompany[0].cacheTimestamp;
-
-//           dispatch({ type: GET_COMPANIES, payload: obj, lastModified });
-//         }
-//         if (changed.type === 'modified') {
-//           dispatch({ type: EDIT_COMPANY, id: changed.doc.id, payload: changed.doc.data() });
-//         }
-//         if (changed.type === 'removed') {
-//           dispatch({ type: DELETE_COMPANY, id: changed.doc.id });
-//         }
-//       });
-//       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
-//     });
-// };
-
-// export const getMemos = () => dispatch => {
-//   listeners.memo = db
-//     .collection('memos')
-//     .where('user', '==', firebase.auth().currentUser.uid)
-//     .onSnapshot(querySnapshot => {
-//       const obj = {};
-//       querySnapshot.docChanges().forEach(changed => {
-//         if (changed.type === 'added') {
-//           querySnapshot.forEach(doc => {
-//             Object.assign(obj, { [doc.id]: doc.data() });
-//           });
-//           AsyncStorage.setItem('memos', JSON.stringify(obj));
-//           dispatch({ type: GET_MEMOS, payload: obj });
-//         }
-//         if (changed.type === 'modified') {
-//           dispatch({ type: GET_MEMOS, id: changed.doc.id, payload: changed.doc.data() });
-//         }
-//         if (changed.type === 'removed') {
-//           dispatch({ type: DELETE_MEMO, id: changed.doc.id });
-//         }
-//       });
-//       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
-//     });
-// };
-
-// export const getEmployees = () => dispatch => {
-//   listeners.employee = db
-//     .collection('employees')
-//     .where('user', '==', firebase.auth().currentUser.uid)
-//     .onSnapshot(querySnapshot => {
-//       const obj = {};
-//       querySnapshot.docChanges().forEach(changed => {
-//         if (changed.type === 'added') {
-//           querySnapshot.forEach(doc => {
-//             Object.assign(obj, { [doc.id]: doc.data() });
-//           });
-//           AsyncStorage.setItem('employees', JSON.stringify(obj));
-//           dispatch({ type: GET_EMPLOYEES, payload: obj });
-//         }
-//         if (changed.type === 'modified') {
-//           dispatch({ type: GET_EMPLOYEES, id: changed.doc.id, payload: changed.doc.data() });
-//         }
-//         if (changed.type === 'removed') {
-//           dispatch({ type: DELETE_EMPLOYEE, id: changed.doc.id });
-//         }
-//       });
-//       dispatch({ type: TOGGLE_LISTENER_FETCHING, payload: false });
-//     });
-// };
-
-// const getLastModifiedCacheTimestamp = () =>
-//   db
-//     .collection('companies')
-//     .where('user', '==', firebase.auth().currentUser.uid)
-//     .orderBy('cacheTimestamp', 'desc')
-//     .limit(1)
-//     .get()
-//     .then(querySnapshot => {
-//       let times = '';
-//       querySnapshot.forEach(doc => {
-//         times = doc.data().cacheTimestamp;
-//       });
-//       return times;
-//     });
-
-// const colRef = collection =>
-//   db.collection(collection).where('user', '==', firebase.auth().currentUser.uid);

@@ -39,7 +39,7 @@ class Companies extends Component {
 
   componentDidMount() {
     this.props.getData();
-    this.notif = new PushService(this.onNotif.bind(this));
+
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!this.state.searchFocused) {
         return false;
@@ -48,6 +48,11 @@ class Companies extends Component {
       this.setState({ value: '' });
       return true;
     });
+  }
+  componentDidUpdate() {
+    if (!this.props.isFetching) {
+      this.notif = new PushService(this.onNotif.bind(this));
+    }
   }
 
   componentWillUnmount() {

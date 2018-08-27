@@ -2,7 +2,7 @@ import {
   EDIT_COMPANY,
   ADD_COMPANY,
   DELETE_COMPANY,
-  TOGGLE_LISTENER_FETCHING,
+  TOGGLE_IS_FETCHING,
   LOGOUT,
   GET_COMPANIES
 } from '../actions/types';
@@ -28,7 +28,7 @@ export default (state = initialState, action) => {
       const updatedCompanies = removeCompany(state.companies, action.id);
       return { ...state, companies: updatedCompanies };
     }
-    case TOGGLE_LISTENER_FETCHING: {
+    case TOGGLE_IS_FETCHING: {
       return {
         ...state,
         isFetching: action.payload
